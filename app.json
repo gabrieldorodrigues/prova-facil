@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Prova Fácil",
-    "slug": "prova-facil",
+    "name": "Avaliação Fácil",
+    "slug": "avaliacao-facil",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -10,8 +10,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.provafacil.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "O Prova Fácil precisa da câmera para fotografar as provas dos alunos.",
-        "NSPhotoLibraryUsageDescription": "O Prova Fácil precisa do acesso à galeria para selecionar fotos das provas."
+        "NSCameraUsageDescription": "O Avaliação Fácil precisa da câmera para fotografar as avaliações dos alunos.",
+        "NSPhotoLibraryUsageDescription": "O Avaliação Fácil precisa do acesso à galeria para selecionar fotos das avaliações."
       }
     },
     "android": {
@@ -21,8 +21,8 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "Permita acesso à câmera para fotografar a prova.",
-          "photosPermission": "Permita acesso à galeria para selecionar fotos da prova."
+          "cameraPermission": "Permita acesso à câmera para fotografar a avaliação.",
+          "photosPermission": "Permita acesso à galeria para selecionar fotos da avaliação."
         }
       ],
       "expo-asset"

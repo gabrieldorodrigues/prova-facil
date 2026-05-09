@@ -1,17 +1,18 @@
-import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo } from 'react';
-import { Icon, useTheme } from 'react-native-paper';
-import { CaptureScreen } from '../screens/CaptureScreen';
-import { CreateExamScreen } from '../screens/CreateExamScreen';
-import { ExamDetailScreen } from '../screens/ExamDetailScreen';
-import { HomeScreen } from '../screens/HomeScreen';
-import { ResultScreen } from '../screens/ResultScreen';
-import { ReviewScreen } from '../screens/ReviewScreen';
-import { TurmasScreen } from '../screens/TurmasScreen';
-import { turmasStorage } from '../services/turmasStorage';
-import { navigationDarkTheme, paperDarkTheme } from '../theme/appTheme';
+import { NavigationContainer } from "@react-navigation/native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import React, { useEffect, useMemo } from "react";
+import { Icon, useTheme } from "react-native-paper";
+import { AssessmentsScreen } from "../screens/AssessmentsScreen";
+import { CaptureScreen } from "../screens/CaptureScreen";
+import { CreateExamScreen } from "../screens/CreateExamScreen";
+import { ExamDetailScreen } from "../screens/ExamDetailScreen";
+import { HomeScreen } from "../screens/HomeScreen";
+import { ResultScreen } from "../screens/ResultScreen";
+import { ReviewScreen } from "../screens/ReviewScreen";
+import { TurmasScreen } from "../screens/TurmasScreen";
+import { turmasStorage } from "../services/turmasStorage";
+import { navigationDarkTheme, paperDarkTheme } from "../theme/appTheme";
 
 type PaperTheme = typeof paperDarkTheme;
 
@@ -34,8 +35,9 @@ export type HomeStackParamList = {
   };
 };
 
-export type NovaStackParamList = {
-  CreateExam: undefined;
+export type AvaliaçõesStackParamList = {
+  Assessments: undefined;
+  CreateAssessment: undefined;
 };
 
 export type TurmasStackParamList = {
@@ -44,12 +46,12 @@ export type TurmasStackParamList = {
 
 export type RootTabParamList = {
   Inicio: undefined;
-  NovaProva: undefined;
+  Avaliações: undefined;
   Turmas: undefined;
 };
 
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
-const NovaStack = createNativeStackNavigator<NovaStackParamList>();
+const AvaliaçõesStack = createNativeStackNavigator<AvaliaçõesStackParamList>();
 const TurmasStack = createNativeStackNavigator<TurmasStackParamList>();
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
@@ -59,7 +61,10 @@ function stackOptions(theme: PaperTheme) {
       backgroundColor: theme.colors.surface,
     },
     headerTintColor: theme.colors.onSurface,
-    headerTitleStyle: { fontWeight: '600' as const, color: theme.colors.onSurface },
+    headerTitleStyle: {
+      fontWeight: "600" as const,
+      color: theme.colors.onSurface,
+    },
     headerShadowVisible: false,
     contentStyle: { backgroundColor: theme.colors.background },
   };
@@ -71,41 +76,46 @@ function HomeStackNavigator({ theme }: { theme: PaperTheme }) {
       <HomeStack.Screen
         name="Home"
         component={HomeScreen}
-        options={{ title: 'Prova Fácil' }}
+        options={{ title: "Início" }}
       />
       <HomeStack.Screen
         name="ExamDetail"
         component={ExamDetailScreen}
-        options={{ title: 'Detalhes da Prova' }}
+        options={{ title: "Detalhes da Avaliação" }}
       />
       <HomeStack.Screen
         name="Capture"
         component={CaptureScreen}
-        options={{ title: 'Capturar Prova' }}
+        options={{ title: "Capturar Avaliação" }}
       />
       <HomeStack.Screen
         name="Review"
         component={ReviewScreen}
-        options={{ title: 'Revisar Respostas' }}
+        options={{ title: "Revisar Respostas" }}
       />
       <HomeStack.Screen
         name="Result"
         component={ResultScreen}
-        options={{ title: 'Resultado', headerBackVisible: false }}
+        options={{ title: "Resultado da Avaliação" }}
       />
     </HomeStack.Navigator>
   );
 }
 
-function NovaStackNavigator({ theme }: { theme: PaperTheme }) {
+function AvaliaçõesStackNavigator({ theme }: { theme: PaperTheme }) {
   return (
-    <NovaStack.Navigator screenOptions={stackOptions(theme)}>
-      <NovaStack.Screen
-        name="CreateExam"
-        component={CreateExamScreen}
-        options={{ title: 'Nova Prova' }}
+    <AvaliaçõesStack.Navigator screenOptions={stackOptions(theme)}>
+      <AvaliaçõesStack.Screen
+        name="Assessments"
+        component={AssessmentsScreen}
+        options={{ title: "Avaliações" }}
       />
-    </NovaStack.Navigator>
+      <AvaliaçõesStack.Screen
+        name="CreateAssessment"
+        component={CreateExamScreen}
+        options={{ title: "Criar Nova Avaliação" }}
+      />
+    </AvaliaçõesStack.Navigator>
   );
 }
 
@@ -115,7 +125,7 @@ function TurmasStackNavigator({ theme }: { theme: PaperTheme }) {
       <TurmasStack.Screen
         name="TurmasList"
         component={TurmasScreen}
-        options={{ title: 'Turmas' }}
+        options={{ title: "Turmas" }}
       />
     </TurmasStack.Navigator>
   );
@@ -126,9 +136,9 @@ function InicioTabStack() {
   return <HomeStackNavigator theme={theme as PaperTheme} />;
 }
 
-function NovaProvaTabStack() {
+function AvaliaçõesTabStack() {
   const theme = useTheme();
-  return <NovaStackNavigator theme={theme as PaperTheme} />;
+  return <AvaliaçõesStackNavigator theme={theme as PaperTheme} />;
 }
 
 function TurmasTabStack() {
@@ -148,7 +158,7 @@ function MainTabs() {
         borderTopColor: theme.colors.outlineVariant,
         borderTopWidth: 1,
       },
-      tabBarLabelStyle: { fontSize: 12, fontWeight: '600' as const },
+      tabBarLabelStyle: { fontSize: 12, fontWeight: "600" as const },
     }),
     [theme],
   );
@@ -159,17 +169,23 @@ function MainTabs() {
         name="Inicio"
         component={InicioTabStack}
         options={{
-          title: 'Início',
-          tabBarIcon: ({ color, size }) => <Icon source="home-outline" color={color} size={size} />,
+          title: "Início",
+          tabBarIcon: ({ color, size }) => (
+            <Icon source="home-outline" color={color} size={size} />
+          ),
         }}
       />
       <Tab.Screen
-        name="NovaProva"
-        component={NovaProvaTabStack}
+        name="Avaliações"
+        component={AvaliaçõesTabStack}
         options={{
-          title: 'Nova prova',
+          title: "Avaliações",
           tabBarIcon: ({ color, size }) => (
-            <Icon source="file-document-edit-outline" color={color} size={size} />
+            <Icon
+              source="file-document-edit-outline"
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -177,7 +193,7 @@ function MainTabs() {
         name="Turmas"
         component={TurmasTabStack}
         options={{
-          title: 'Turmas',
+          title: "Turmas",
           tabBarIcon: ({ color, size }) => (
             <Icon source="account-group-outline" color={color} size={size} />
           ),

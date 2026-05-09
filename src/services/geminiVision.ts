@@ -1,16 +1,15 @@
-import * as FileSystem from 'expo-file-system/legacy';
-import * as ImageManipulator from 'expo-image-manipulator';
-import { Exam } from '../types';
-import { getOptionsForType } from '../utils/grading';
+import * as FileSystem from "expo-file-system/legacy";
+import * as ImageManipulator from "expo-image-manipulator";
+import { Exam } from "../types";
+import { getOptionsForType } from "../utils/grading";
 
-const MODEL =
-  process.env.EXPO_PUBLIC_GEMINI_MODEL || 'gemini-3.1-flash-lite';
+const MODEL = process.env.EXPO_PUBLIC_GEMINI_MODEL || "gemini-3.1-flash-lite";
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
 export class GeminiKeyMissingError extends Error {
   constructor() {
-    super('Chave EXPO_PUBLIC_GEMINI_API_KEY não configurada no .env');
-    this.name = 'GeminiKeyMissingError';
+    super("Chave EXPO_PUBLIC_GEMINI_API_KEY não configurada no .env");
+    this.name = "GeminiKeyMissingError";
   }
 }
 
@@ -38,12 +37,12 @@ async function compressAndEncode(uri: string): Promise<string> {
 function buildPrompt(exam: Exam): string {
   const lines = exam.questions
     .map((q) => {
-      const opts = getOptionsForType(q.type).join('/');
+      const opts = getOptionsForType(q.type).join("/");
       return `- Questão ${q.number}: alternativas válidas = [${opts}]`;
     })
-    .join('\n');
+    .join("\n");
 
-  return `Você é um assistente de correção de provas escolares. As imagens abaixo mostram a folha de respostas de um aluno.
+  return `Você é um assistente de correção de avaliações escolares. As imagens abaixo mostram a folha de respostas de um aluno.
 Para cada questão listada, identifique qual alternativa o aluno marcou.
 
 Regras:
@@ -68,7 +67,7 @@ export async function detectAnswers(
   const imageParts = await Promise.all(
     photoUris.map(async (uri) => ({
       inline_data: {
-        mime_type: 'image/jpeg',
+        mime_type: "image/jpeg",
         data: await compressAndEncode(uri),
       },
     })),
@@ -81,31 +80,31 @@ export async function detectAnswers(
       },
     ],
     generationConfig: {
-      responseMimeType: 'application/json',
+      responseMimeType: "application/json",
       responseSchema: {
-        type: 'object',
+        type: "object",
         properties: {
           answers: {
-            type: 'array',
+            type: "array",
             items: {
-              type: 'object',
+              type: "object",
               properties: {
-                questionNumber: { type: 'integer' },
-                marked: { type: 'string' },
+                questionNumber: { type: "integer" },
+                marked: { type: "string" },
               },
-              required: ['questionNumber', 'marked'],
+              required: ["questionNumber", "marked"],
             },
           },
         },
-        required: ['answers'],
+        required: ["answers"],
       },
       temperature: 0,
     },
   };
 
   const res = await fetch(`${API_URL}?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 
@@ -115,25 +114,28 @@ export async function detectAnswers(
   }
 
   const json = await res.json();
-  const text: string | undefined = json?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('Resposta vazia do Gemini.');
+  const text: string | undefined =
+    json?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error("Resposta vazia do Gemini.");
 
   let parsed: { answers?: GeminiAnswer[] };
   try {
     parsed = JSON.parse(text);
   } catch {
-    throw new Error('Gemini retornou JSON inválido.');
+    throw new Error("Gemini retornou JSON inválido.");
   }
 
   const result: Record<string, string> = {};
-  for (const q of exam.questions) result[q.id] = '?';
+  for (const q of exam.questions) result[q.id] = "?";
 
   for (const ans of parsed.answers || []) {
     const q = exam.questions.find((qq) => qq.number === ans.questionNumber);
     if (!q) continue;
     const valid = getOptionsForType(q.type);
-    const marked = String(ans.marked || '?').toUpperCase().trim();
-    result[q.id] = valid.includes(marked) ? marked : '?';
+    const marked = String(ans.marked || "?")
+      .toUpperCase()
+      .trim();
+    result[q.id] = valid.includes(marked) ? marked : "?";
   }
 
   return result;

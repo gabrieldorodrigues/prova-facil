@@ -1,16 +1,16 @@
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Card, Text, useTheme } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AnswerCell } from '../components/AnswerCell';
-import { HomeStackParamList } from '../navigation/AppNavigator';
-import { detectAnswers, GeminiKeyMissingError } from '../services/geminiVision';
-import { examStorage } from '../services/storage';
-import { Exam, QUESTION_TYPE_LABEL } from '../types';
-import { getOptionsForType } from '../utils/grading';
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import { Button, Card, Text, useTheme } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AnswerCell } from "../components/AnswerCell";
+import { HomeStackParamList } from "../navigation/AppNavigator";
+import { detectAnswers, GeminiKeyMissingError } from "../services/geminiVision";
+import { examStorage } from "../services/storage";
+import { Exam, QUESTION_TYPE_LABEL } from "../types";
+import { getOptionsForType } from "../utils/grading";
 
-type Props = NativeStackScreenProps<HomeStackParamList, 'Review'>;
+type Props = NativeStackScreenProps<HomeStackParamList, "Review">;
 
 export function ReviewScreen({ route, navigation }: Props) {
   const theme = useTheme();
@@ -38,13 +38,15 @@ export function ReviewScreen({ route, navigation }: Props) {
         if (cancelled) return;
         if (err instanceof GeminiKeyMissingError) {
           setError(
-            'Chave de API do Gemini não configurada. Crie um .env na raiz do projeto com EXPO_PUBLIC_GEMINI_API_KEY=... (obtenha em https://aistudio.google.com/apikey) e reinicie o expo. Você pode preencher as respostas manualmente abaixo.',
+            "Chave de API do Gemini não configurada. Crie um .env na raiz do projeto com EXPO_PUBLIC_GEMINI_API_KEY=... (obtenha em https://aistudio.google.com/apikey) e reinicie o expo. Você pode preencher as respostas manualmente abaixo.",
           );
         } else {
-          setError(`Falha ao chamar Gemini: ${String(err)}. Preencha manualmente.`);
+          setError(
+            `Falha ao chamar Gemini: ${String(err)}. Preencha manualmente.`,
+          );
         }
         const fallback: Record<string, string> = {};
-        for (const q of e.questions) fallback[q.id] = '?';
+        for (const q of e.questions) fallback[q.id] = "?";
         setAnswers(fallback);
       } finally {
         if (!cancelled) setLoading(false);
@@ -57,9 +59,13 @@ export function ReviewScreen({ route, navigation }: Props) {
 
   if (loading || !exam) {
     return (
-      <View style={[styles.loading, { backgroundColor: theme.colors.background }]}>
+      <View
+        style={[styles.loading, { backgroundColor: theme.colors.background }]}
+      >
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={[styles.loadingText, { color: theme.colors.onSurfaceVariant }]}>
+        <Text
+          style={[styles.loadingText, { color: theme.colors.onSurfaceVariant }]}
+        >
           Analisando fotos com Gemini...
         </Text>
       </View>
@@ -70,15 +76,28 @@ export function ReviewScreen({ route, navigation }: Props) {
     <View style={[styles.flex, { backgroundColor: theme.colors.background }]}>
       <ScrollView
         style={styles.flex}
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 + insets.bottom }}
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: Math.max(insets.bottom + 100, 100),
+        }}
       >
         <Text style={[styles.subtitle, { color: theme.colors.onSurface }]}>
-          Aluno: <Text style={{ fontWeight: '700' }}>{studentName}</Text>
+          Aluno: <Text style={{ fontWeight: "700" }}>{studentName}</Text>
         </Text>
-        <Text style={[styles.subtitle, { marginBottom: 8, color: theme.colors.onSurface }]}>
-          Turma: <Text style={{ fontWeight: '700' }}>{className}</Text>
+        <Text
+          style={[
+            styles.subtitle,
+            { marginBottom: 8, color: theme.colors.onSurface },
+          ]}
+        >
+          Turma: <Text style={{ fontWeight: "700" }}>{className}</Text>
         </Text>
-        <Text style={[styles.subtitle, { marginBottom: 12, color: theme.colors.onSurfaceVariant }]}>
+        <Text
+          style={[
+            styles.subtitle,
+            { marginBottom: 12, color: theme.colors.onSurfaceVariant },
+          ]}
+        >
           Toque em uma alternativa para alternar a resposta detectada.
         </Text>
 
@@ -93,14 +112,16 @@ export function ReviewScreen({ route, navigation }: Props) {
             ]}
           >
             <Card.Content>
-              <Text style={{ color: theme.colors.onErrorContainer }}>{error}</Text>
+              <Text style={{ color: theme.colors.onErrorContainer }}>
+                {error}
+              </Text>
             </Card.Content>
           </Card>
         )}
 
         {exam.questions.map((q) => {
           const options = getOptionsForType(q.type);
-          const detected = answers[q.id] || '?';
+          const detected = answers[q.id] || "?";
           return (
             <Card
               key={q.id}
@@ -108,8 +129,17 @@ export function ReviewScreen({ route, navigation }: Props) {
               mode="elevated"
             >
               <View style={styles.qHeader}>
-                <Text style={[styles.qNumber, { color: theme.colors.onSurface }]}>Questão {q.number}</Text>
-                <Text style={[styles.qType, { color: theme.colors.onSurfaceVariant }]}>
+                <Text
+                  style={[styles.qNumber, { color: theme.colors.onSurface }]}
+                >
+                  Questão {q.number}
+                </Text>
+                <Text
+                  style={[
+                    styles.qType,
+                    { color: theme.colors.onSurfaceVariant },
+                  ]}
+                >
                   {QUESTION_TYPE_LABEL[q.type]}
                 </Text>
               </View>
@@ -118,16 +148,19 @@ export function ReviewScreen({ route, navigation }: Props) {
                   <AnswerCell
                     key={opt}
                     label={opt}
-                    variant={detected === opt ? 'selected' : 'default'}
+                    variant={detected === opt ? "selected" : "default"}
                     onPress={() =>
-                      setAnswers((p) => ({ ...p, [q.id]: detected === opt ? '?' : opt }))
+                      setAnswers((p) => ({
+                        ...p,
+                        [q.id]: detected === opt ? "?" : opt,
+                      }))
                     }
                   />
                 ))}
                 <AnswerCell
                   label="?"
-                  variant={detected === '?' ? 'unknown' : 'default'}
-                  onPress={() => setAnswers((p) => ({ ...p, [q.id]: '?' }))}
+                  variant={detected === "?" ? "unknown" : "default"}
+                  onPress={() => setAnswers((p) => ({ ...p, [q.id]: "?" }))}
                 />
               </View>
             </Card>
@@ -140,7 +173,7 @@ export function ReviewScreen({ route, navigation }: Props) {
           mode="contained"
           contentStyle={{ paddingVertical: 6 }}
           onPress={() =>
-            navigation.navigate('Result', {
+            navigation.navigate("Result", {
               examId,
               studentName,
               photoUris,
@@ -158,17 +191,26 @@ export function ReviewScreen({ route, navigation }: Props) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+  loading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 32,
+  },
   loadingText: { marginTop: 16 },
   subtitle: { marginBottom: 4 },
   qCard: { marginBottom: 10, padding: 12 },
-  qHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  qNumber: { fontWeight: '600' },
+  qHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  qNumber: { fontWeight: "600" },
   qType: { fontSize: 12 },
-  cells: { flexDirection: 'row', flexWrap: 'wrap' },
+  cells: { flexDirection: "row", flexWrap: "wrap" },
   errorCard: { marginBottom: 12, borderWidth: 1 },
   bottomBar: {
-    position: 'absolute',
+    position: "absolute",
     left: 16,
     right: 16,
   },
