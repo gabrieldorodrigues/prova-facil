@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Prova Fácil",
+    "slug": "prova-facil",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.provafacil.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "O Prova Fácil precisa da câmera para fotografar as provas dos alunos.",
+        "NSPhotoLibraryUsageDescription": "O Prova Fácil precisa do acesso à galeria para selecionar fotos das provas."
+      }
+    },
+    "android": {
+      "package": "com.provafacil.app"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Permita acesso à câmera para fotografar a prova.",
+          "photosPermission": "Permita acesso à galeria para selecionar fotos da prova."
+        }
+      ],
+      "expo-asset"
+    ],
+    "extra": {}
+  }
+}
