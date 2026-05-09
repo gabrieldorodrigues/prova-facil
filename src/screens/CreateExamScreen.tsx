@@ -2,13 +2,15 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import React, { useMemo, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Divider, Text, TextInput } from 'react-native-paper';
+import { Button, Divider, Text, TextInput, useTheme } from 'react-native-paper';
 import { QuestionRow } from '../components/QuestionRow';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { TurmaPickerField } from '../components/TurmaPickerField';
+import { NovaStackParamList } from '../navigation/AppNavigator';
 import { examStorage } from '../services/storage';
+import { turmasStorage } from '../services/turmasStorage';
 import { Exam, Question } from '../types';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'CreateExam'>;
+type Props = NativeStackScreenProps<NovaStackParamList, 'CreateExam'>;
 
 function makeQuestion(number: number): Question {
   return {
@@ -21,6 +23,7 @@ function makeQuestion(number: number): Question {
 }
 
 export function CreateExamScreen({ navigation }: Props) {
+  const theme = useTheme();
   const [name, setName] = useState('');
   const [className, setClassName] = useState('');
   const [questions, setQuestions] = useState<Question[]>([makeQuestion(1)]);
@@ -49,27 +52,32 @@ export function CreateExamScreen({ navigation }: Props) {
     if (questions.length === 0) return Alert.alert('Atenção', 'Adicione pelo menos uma questão.');
     if (totalWeight <= 0) return Alert.alert('Atenção', 'O peso total deve ser maior que zero.');
 
+    const resolvedClass = await turmasStorage.add(className.trim());
+
     const exam: Exam = {
       id: Crypto.randomUUID(),
       name: name.trim(),
-      className: className.trim(),
+      className: resolvedClass || className.trim(),
       createdAt: new Date().toISOString(),
       questions,
     };
     await examStorage.save(exam);
-    navigation.goBack();
+    navigation.getParent()?.navigate('Inicio');
   };
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={[styles.flex, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        style={styles.container}
+        style={[styles.flex, { backgroundColor: theme.colors.background }]}
         contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
         keyboardShouldPersistTaps="handled"
       >
+        <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+          Informações gerais
+        </Text>
         <TextInput
           label="Nome da prova"
           mode="outlined"
@@ -78,20 +86,15 @@ export function CreateExamScreen({ navigation }: Props) {
           style={styles.field}
           placeholder="Ex.: Matemática 1º Bimestre"
         />
-        <TextInput
-          label="Turma"
-          mode="outlined"
-          value={className}
-          onChangeText={setClassName}
-          style={styles.field}
-          placeholder="Ex.: 9A"
-        />
+        <TurmaPickerField value={className} onChange={setClassName} />
 
         <Divider style={{ marginVertical: 12 }} />
 
         <View style={styles.headerRow}>
-          <Text variant="titleMedium">Questões</Text>
-          <Text style={{ color: '#6b7280' }}>Soma dos pesos: {totalWeight}</Text>
+          <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
+            Questões
+          </Text>
+          <Text style={{ color: theme.colors.onSurfaceVariant }}>Soma dos pesos: {totalWeight}</Text>
         </View>
 
         {questions.map((q, idx) => (
@@ -121,7 +124,8 @@ export function CreateExamScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  flex: { flex: 1 },
+  sectionTitle: { marginBottom: 12 },
   field: { marginBottom: 12 },
   headerRow: {
     flexDirection: 'row',

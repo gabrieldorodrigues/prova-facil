@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { IconButton, SegmentedButtons, Text, TextInput } from 'react-native-paper';
+import { IconButton, SegmentedButtons, Text, TextInput, useTheme } from 'react-native-paper';
 import { Question, QUESTION_TYPE_LABEL, QuestionType } from '../types';
 import { getOptionsForType } from '../utils/grading';
 import { AnswerCell } from './AnswerCell';
@@ -12,7 +12,19 @@ interface Props {
 }
 
 export function QuestionRow({ question, onChange, onRemove }: Props) {
+  const theme = useTheme();
   const options = getOptionsForType(question.type);
+
+  const rowStyle = useMemo(
+    () => [
+      styles.row,
+      {
+        backgroundColor: theme.colors.surfaceVariant,
+        borderColor: theme.colors.outlineVariant,
+      },
+    ],
+    [theme.colors.outlineVariant, theme.colors.surfaceVariant],
+  );
 
   const handleTypeChange = (type: string) => {
     const newType = type as QuestionType;
@@ -34,7 +46,7 @@ export function QuestionRow({ question, onChange, onRemove }: Props) {
   };
 
   return (
-    <View style={styles.row}>
+    <View style={rowStyle}>
       <View style={styles.headerRow}>
         <Text variant="titleMedium">Questão {question.number}</Text>
         <IconButton icon="delete-outline" size={20} onPress={onRemove} />
@@ -52,7 +64,7 @@ export function QuestionRow({ question, onChange, onRemove }: Props) {
         style={{ marginBottom: 12 }}
       />
 
-      <Text variant="labelMedium" style={styles.label}>
+      <Text variant="labelMedium" style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
         Resposta correta
       </Text>
       <View style={styles.cells}>
@@ -81,8 +93,8 @@ export function QuestionRow({ question, onChange, onRemove }: Props) {
 
 const styles = StyleSheet.create({
   row: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
+    borderRadius: 6,
+    borderWidth: 1,
     padding: 12,
     marginBottom: 12,
   },
@@ -92,6 +104,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  label: { marginBottom: 6, color: '#4b5563' },
+  label: { marginBottom: 6 },
   cells: { flexDirection: 'row', flexWrap: 'wrap' },
 });

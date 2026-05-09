@@ -19,11 +19,12 @@ export async function exportCorrectionsCSV(
 ): Promise<string | null> {
   if (corrections.length === 0) return null;
 
-  const header = ['Aluno', 'Nota', 'Acertos', 'Erros', 'Data'].join(',');
+  const header = ['Aluno', 'Turma', 'Nota', 'Acertos', 'Erros', 'Data'].join(',');
   const rows = corrections
     .map((c) =>
       [
         escapeCell(c.studentName),
+        escapeCell(c.className ?? exam.className),
         c.score.toFixed(1).replace('.', ','),
         String(c.hits),
         String(c.misses),

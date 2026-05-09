@@ -20,6 +20,8 @@ export interface Correction {
   id: string;
   examId: string;
   studentName: string;
+  /** Turma no momento da correção (export/histórico). Correções antigas podem omitir. */
+  className?: string;
   photoUris: string[];
   detectedAnswers: Record<string, string>;
   score: number;

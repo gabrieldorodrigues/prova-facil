@@ -1,18 +1,21 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Card, Text } from 'react-native-paper';
+import { Button, Card, Text, useTheme } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnswerCell } from '../components/AnswerCell';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { HomeStackParamList } from '../navigation/AppNavigator';
 import { detectAnswers, GeminiKeyMissingError } from '../services/geminiVision';
 import { examStorage } from '../services/storage';
 import { Exam, QUESTION_TYPE_LABEL } from '../types';
 import { getOptionsForType } from '../utils/grading';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Review'>;
+type Props = NativeStackScreenProps<HomeStackParamList, 'Review'>;
 
 export function ReviewScreen({ route, navigation }: Props) {
-  const { examId, studentName, photoUris } = route.params;
+  const theme = useTheme();
+  const { examId, studentName, photoUris, className } = route.params;
+  const insets = useSafeAreaInsets();
   const [exam, setExam] = useState<Exam | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -52,21 +55,11 @@ export function ReviewScreen({ route, navigation }: Props) {
     };
   }, [examId, photoUris, navigation]);
 
-  const cycleAnswer = (questionId: string, options: string[]) => {
-    setAnswers((prev) => {
-      const current = prev[questionId] || '?';
-      const allOpts = [...options, '?'];
-      const idx = allOpts.indexOf(current);
-      const next = allOpts[(idx + 1) % allOpts.length];
-      return { ...prev, [questionId]: next };
-    });
-  };
-
   if (loading || !exam) {
     return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={{ marginTop: 16, color: '#6b7280' }}>
+      <View style={[styles.loading, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={[styles.loadingText, { color: theme.colors.onSurfaceVariant }]}>
           Analisando fotos com Gemini...
         </Text>
       </View>
@@ -74,22 +67,33 @@ export function ReviewScreen({ route, navigation }: Props) {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={[styles.flex, { backgroundColor: theme.colors.background }]}>
       <ScrollView
-        style={styles.container}
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        style={styles.flex}
+        contentContainerStyle={{ padding: 16, paddingBottom: 100 + insets.bottom }}
       >
-        <Text style={styles.subtitle}>
+        <Text style={[styles.subtitle, { color: theme.colors.onSurface }]}>
           Aluno: <Text style={{ fontWeight: '700' }}>{studentName}</Text>
         </Text>
-        <Text style={[styles.subtitle, { marginBottom: 12 }]}>
+        <Text style={[styles.subtitle, { marginBottom: 8, color: theme.colors.onSurface }]}>
+          Turma: <Text style={{ fontWeight: '700' }}>{className}</Text>
+        </Text>
+        <Text style={[styles.subtitle, { marginBottom: 12, color: theme.colors.onSurfaceVariant }]}>
           Toque em uma alternativa para alternar a resposta detectada.
         </Text>
 
         {error && (
-          <Card style={styles.errorCard}>
+          <Card
+            style={[
+              styles.errorCard,
+              {
+                backgroundColor: theme.colors.errorContainer,
+                borderColor: theme.colors.error,
+              },
+            ]}
+          >
             <Card.Content>
-              <Text style={{ color: '#991b1b' }}>{error}</Text>
+              <Text style={{ color: theme.colors.onErrorContainer }}>{error}</Text>
             </Card.Content>
           </Card>
         )}
@@ -98,10 +102,16 @@ export function ReviewScreen({ route, navigation }: Props) {
           const options = getOptionsForType(q.type);
           const detected = answers[q.id] || '?';
           return (
-            <Card key={q.id} style={styles.qCard}>
+            <Card
+              key={q.id}
+              style={[styles.qCard, { backgroundColor: theme.colors.surface }]}
+              mode="elevated"
+            >
               <View style={styles.qHeader}>
-                <Text style={styles.qNumber}>Questão {q.number}</Text>
-                <Text style={styles.qType}>{QUESTION_TYPE_LABEL[q.type]}</Text>
+                <Text style={[styles.qNumber, { color: theme.colors.onSurface }]}>Questão {q.number}</Text>
+                <Text style={[styles.qType, { color: theme.colors.onSurfaceVariant }]}>
+                  {QUESTION_TYPE_LABEL[q.type]}
+                </Text>
               </View>
               <View style={styles.cells}>
                 {options.map((opt) => (
@@ -125,7 +135,7 @@ export function ReviewScreen({ route, navigation }: Props) {
         })}
       </ScrollView>
 
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { bottom: 16 + insets.bottom }]}>
         <Button
           mode="contained"
           contentStyle={{ paddingVertical: 6 }}
@@ -135,6 +145,7 @@ export function ReviewScreen({ route, navigation }: Props) {
               studentName,
               photoUris,
               detectedAnswers: answers,
+              className,
             })
           }
         >
@@ -146,19 +157,19 @@ export function ReviewScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  flex: { flex: 1 },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  subtitle: { color: '#374151', marginBottom: 4 },
+  loadingText: { marginTop: 16 },
+  subtitle: { marginBottom: 4 },
   qCard: { marginBottom: 10, padding: 12 },
   qHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  qNumber: { fontWeight: '600', color: '#111827' },
-  qType: { color: '#6b7280', fontSize: 12 },
+  qNumber: { fontWeight: '600' },
+  qType: { fontSize: 12 },
   cells: { flexDirection: 'row', flexWrap: 'wrap' },
-  errorCard: { backgroundColor: '#fef2f2', marginBottom: 12, borderColor: '#fecaca', borderWidth: 1 },
+  errorCard: { marginBottom: 12, borderWidth: 1 },
   bottomBar: {
     position: 'absolute',
     left: 16,
     right: 16,
-    bottom: 16,
   },
 });

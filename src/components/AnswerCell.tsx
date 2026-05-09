@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
 
 type Variant = 'default' | 'selected' | 'correct' | 'wrong' | 'unknown';
 
@@ -11,16 +11,25 @@ interface Props {
   size?: number;
 }
 
-const COLORS: Record<Variant, { bg: string; fg: string; border: string }> = {
-  default: { bg: '#fff', fg: '#374151', border: '#d1d5db' },
-  selected: { bg: '#2563eb', fg: '#fff', border: '#1d4ed8' },
-  correct: { bg: '#16a34a', fg: '#fff', border: '#15803d' },
-  wrong: { bg: '#dc2626', fg: '#fff', border: '#b91c1c' },
-  unknown: { bg: '#f3f4f6', fg: '#6b7280', border: '#d1d5db' },
-};
-
 export function AnswerCell({ label, variant = 'default', onPress, size = 40 }: Props) {
-  const c = COLORS[variant];
+  const theme = useTheme();
+
+  const colors = useMemo(() => {
+    const surfaceVariant = theme.colors.surfaceVariant;
+    const onSurface = theme.colors.onSurface;
+    const outline = theme.colors.outline;
+    const primary = theme.colors.primary;
+    const onPrimary = theme.colors.onPrimary;
+    return {
+      default: { bg: surfaceVariant, fg: onSurface, border: outline },
+      selected: { bg: primary, fg: onPrimary, border: primary },
+      correct: { bg: '#22c55e', fg: '#052e16', border: '#16a34a' },
+      wrong: { bg: '#f87171', fg: '#450a0a', border: '#ef4444' },
+      unknown: { bg: theme.colors.surface, fg: theme.colors.onSurfaceVariant, border: outline },
+    } as const;
+  }, [theme.colors]);
+
+  const c = colors[variant];
   const content = (
     <View
       style={[
@@ -37,7 +46,7 @@ export function AnswerCell({ label, variant = 'default', onPress, size = 40 }: P
 
 const styles = StyleSheet.create({
   cell: {
-    borderRadius: 8,
+    borderRadius: 4,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
