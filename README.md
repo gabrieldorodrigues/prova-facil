@@ -28,12 +28,13 @@ O **Prova Fácil** transforma o smartphone do professor em um corretor automáti
 
 O fluxo é simples e poderoso:
 
-1. O professor cadastra a prova com nome, turma, questões e gabarito.
-2. Tira uma foto da prova respondida pelo aluno.
-3. A IA do Google Gemini lê as marcações na imagem.
-4. O professor revisa e ajusta se necessário.
-5. A nota é calculada automaticamente no sistema brasileiro de 0 a 10.
-6. O boletim da turma pode ser exportado em CSV.
+1. O professor cadastra **turmas** e os **alunos** de cada uma.
+2. Cria uma prova com nome, turmas atribuídas, questões e gabarito (com peso por questão).
+3. Tira fotos das provas respondidas — uma por vez (por aluno) ou em lote (várias de uma turma).
+4. A IA do Google Gemini lê as marcações **e o nome do aluno** no cabeçalho.
+5. O app faz fuzzy match contra a lista de alunos da turma, e o professor confirma/ajusta.
+6. A nota é calculada automaticamente no sistema brasileiro de 0 a 10.
+7. O boletim da turma pode ser exportado em CSV.
 
 > **MVP – Fase 1:** apenas questões objetivas (múltipla escolha A–E, A–D, V/F). As fases seguintes contemplam correção discursiva via IA, dashboards e integração com sistemas escolares.
 
@@ -45,15 +46,18 @@ O fluxo é simples e poderoso:
 
 | Funcionalidade | Descrição |
 |---|---|
-| 📋 **Cadastro de provas** | Nome, turma, questões dinâmicas com 3 tipos (A–E, A–D, V/F), pesos individuais e helper para distribuir pesos automaticamente |
-| 📸 **Captura por foto** | Câmera ou galeria, múltiplas fotos por prova (até várias páginas), pré-visualização com miniaturas numeradas |
-| 🤖 **Detecção por IA** | Google Gemini 3.1 Flash Lite (Vision) analisa as marcações e retorna JSON estruturado |
-| ✏️ **Revisão editável** | Professor pode ajustar qualquer resposta detectada com um toque, com indicador visual de questões "para verificar" |
+| 🏫 **Gestão de turmas e alunos** | Cadastro de turmas, alunos por turma, com avatares e contadores. Provas podem ser atribuídas a múltiplas turmas. |
+| 📋 **Cadastro/edição de provas** | Nome, múltiplas turmas, questões dinâmicas com 3 tipos (A–E, A–D, V/F), pesos individuais e helper para distribuir pesos automaticamente. Edição posterior preservando correções já feitas. |
+| 📸 **Captura por foto** | Câmera ou galeria, múltiplas fotos por prova (várias páginas), pré-visualização com miniaturas numeradas |
+| 🤖 **Detecção por IA** | Google Gemini 3.1 Flash Lite (Vision) analisa as marcações e retorna JSON estruturado, com `responseSchema` |
+| 👥 **Identificação automática de aluno** | A IA também lê o nome no cabeçalho da prova; o app faz fuzzy match com a lista de alunos da turma |
+| 🚀 **Correção em lote** | Tira N fotos, processa todas em paralelo, revisa em uma tela única — ~12min para 30 provas |
+| ✏️ **Revisão editável** | Professor pode ajustar qualquer resposta detectada com um toque; questões inseguras aparecem com chip "verificar" |
 | 🎯 **Correção automática** | Cálculo ponderado da nota (0–10), com classificação Aprovado / Recuperação / Reprovado |
-| 📊 **Dashboard da prova** | Média da turma, melhor nota, taxa de aprovados, gabarito visual e lista de correções |
+| 📊 **Dashboard da prova** | Estatísticas da turma, média, melhor nota, aprovados; gabarito oficial; correções agrupadas por turma |
 | 📤 **Exportação CSV** | Compartilhamento via Share Sheet do iOS (WhatsApp, e-mail, Drive, AirDrop, etc.) |
-| 💾 **Persistência local** | AsyncStorage – funciona 100% offline (após carregar a IA) |
-| 🎨 **UI moderna** | Design system com paleta indigo/emerald, cards elevados, feedback visual imediato |
+| 💾 **Persistência local** | AsyncStorage com migração automática entre versões; funciona offline (exceto a chamada da IA) |
+| 🎨 **UI moderna** | Componentes próprios estilo nativecn-ui (shadcn-for-RN) sobre NativeWind + Tailwind, paleta azul/amarelo/verde, dialogs nativos via Modal RN |
 
 ### Roadmap
 
@@ -68,22 +72,28 @@ O fluxo é simples e poderoso:
 ## 🛠 Stack técnica
 
 ### Mobile
-- **React Native 0.81** – framework cross-platform
+- **React Native 0.81** + **React 19** – framework cross-platform com new architecture (Fabric) habilitada
 - **Expo SDK 54** (managed workflow) – build e distribuição via Expo Go
 - **TypeScript** strict – tipagem em todo o código
-- **React Navigation 7** – stack navigator nativo
-- **React Native Paper 5** – componentes Material 3
+- **React Navigation 7** – `native-stack` + `bottom-tabs`
+
+### UI
+- **NativeWind 4** + **Tailwind CSS 3** – styling utility-first em RN
+- **Componentes próprios** em `src/components/ui/` no padrão **nativecn-ui** (shadcn-for-RN): Button, Input, Dialog, Toast, Tabs, Card, Badge, Fab, IconButton, SegmentedControl, Spinner — fontes copiadas para o projeto e customizáveis
+- **`class-variance-authority`** + **`clsx`** + **`tailwind-merge`** para variantes e composição de classes
+- **`@expo/vector-icons`** (Ionicons) – ícones
 
 ### IA & Visão
 - **Google Gemini 3.1 Flash Lite** – modelo multimodal para análise de imagens
 - Resposta com `responseSchema` JSON estruturado (zero parsing frágil)
+- Detecção em lote (`detectBatch`) processa múltiplas fotos em paralelo
 
 ### Mídia
 - `expo-image-picker` – câmera e galeria
 - `expo-image-manipulator` – redimensiona para 1024px e comprime (q=0.7) antes de enviar à API
 
 ### Persistência
-- `@react-native-async-storage/async-storage` – chave-valor local
+- `@react-native-async-storage/async-storage` – chave-valor local com migração v1 → v2 transparente
 
 ### Exportação
 - `expo-file-system` – escreve CSV no `cacheDirectory`
@@ -94,88 +104,106 @@ O fluxo é simples e poderoso:
 ## 🏗 Arquitetura
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                       CAMADA DE UI                            │
-│   HomeScreen   CreateExamScreen   ExamDetailScreen           │
-│   CaptureScreen   ReviewScreen   ResultScreen                │
-└────────────────────────────┬─────────────────────────────────┘
-                             │
-┌────────────────────────────▼─────────────────────────────────┐
-│                  CAMADA DE COMPONENTES                        │
-│   QuestionRow  AnswerCell  StatCard  ScoreBadge              │
-│   EmptyState   SectionHeader                                 │
-└────────────────────────────┬─────────────────────────────────┘
-                             │
-┌────────────────────────────▼─────────────────────────────────┐
-│                    CAMADA DE SERVIÇOS                         │
-│  storage.ts          geminiVision.ts        csvExport.ts     │
-│  (AsyncStorage)      (Gemini Vision API)    (FS + Sharing)   │
-└──────┬──────────────────┬──────────────────────┬─────────────┘
-       │                  │                      │
-       ▼                  ▼                      ▼
+┌────────────────────────────────────────────────────────────────────┐
+│                          CAMADA DE TELAS                            │
+│  HomeScreen   ClassesScreen     ClassDetailScreen                  │
+│  ExamsScreen  CreateExamScreen  EditExamScreen   ExamDetailScreen  │
+│  CaptureScreen   BatchCaptureScreen   ReviewScreen                 │
+│  BatchReviewScreen   ResultScreen                                  │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+┌──────────────────────────────▼─────────────────────────────────────┐
+│                      CAMADA DE COMPONENTES                          │
+│  src/components/                                                    │
+│    AnswerCell  QuestionRow  StatCard  ScoreBadge  EmptyState       │
+│    SectionHeader  ClassMultiSelectDialog                           │
+│  src/components/ui/  (estilo nativecn-ui, copiados para o projeto) │
+│    Button  Input  Dialog  Toast  Tabs  Card  Badge                 │
+│    Fab  IconButton  SegmentedControl  Spinner                      │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+┌──────────────────────────────▼─────────────────────────────────────┐
+│                       CAMADA DE SERVIÇOS                            │
+│  storage.ts       geminiVision.ts        csvExport.ts              │
+│  (Async + v2      (Gemini Vision +       (FS + Sharing)            │
+│   migration)       detectBatch)                                    │
+└──────┬───────────────────┬────────────────────────┬────────────────┘
+       │                   │                        │
+       ▼                   ▼                        ▼
 ┌──────────────┐  ┌────────────────┐  ┌──────────────────────┐
 │ AsyncStorage │  │  Gemini API    │  │  iOS Share Sheet     │
 │   (local)    │  │   (cloud)      │  │   (WhatsApp/email)   │
 └──────────────┘  └────────────────┘  └──────────────────────┘
 ```
 
-### Fluxo de correção
+### Fluxo de correção (individual e em lote)
 
 ```
 Professor abre app
        │
        ▼
-┌──────────────────┐    ┌──────────────────┐
-│  Cria prova      │───▶│ Salva no         │
-│  + gabarito      │    │ AsyncStorage     │
-└──────────────────┘    └──────────────────┘
+┌────────────────────────┐   ┌────────────────────────┐
+│  Cadastra turmas e     │──▶│ Salva no AsyncStorage  │
+│  alunos                │   │  classes / students    │
+└────────────────────────┘   └────────────────────────┘
        │
        ▼
-┌──────────────────┐
-│  Tira foto da    │
-│  prova do aluno  │
-└────────┬─────────┘
-         │
-         ▼
+┌────────────────────────┐   ┌────────────────────────┐
+│  Cria prova            │──▶│ Salva exam com        │
+│  + gabarito            │   │ classIds[]            │
+│  + atribui à(s) turma(s)   │                       │
+└────────────────────────┘   └────────────────────────┘
+       │
+       ▼
+┌─────────────────────┐    ┌─────────────────────────┐
+│  Individual:        │    │  Em lote:               │
+│  seleciona aluno +  │    │  seleciona turma +      │
+│  tira fotos         │    │  tira N fotos           │
+└──────────┬──────────┘    └────────────┬────────────┘
+           │                            │
+           ▼                            ▼
+┌──────────────────────────────────────────────────────┐
+│ expo-image-manipulator → 1024px / JPEG 0.7 / base64  │
+└──────────────────────────┬───────────────────────────┘
+                           │
+                           ▼
+┌──────────────────────────────────────────────────────┐
+│ POST gemini-3.1-flash-lite (1 chamada por foto)      │
+│ ├─ prompt com questões + alternativas válidas        │
+│ ├─ instrução para ler nome do aluno (lote)           │
+│ ├─ imagem em inline_data                             │
+│ └─ responseSchema JSON                               │
+└──────────────────────────┬───────────────────────────┘
+                           │ JSON estruturado
+                           ▼
+┌──────────────────────────────────────────────────────┐
+│ findStudentByName: fuzzy match contra lista da turma │
+│ (normalize NFD, tokens, score >= 0.5)                │
+└──────────────────────────┬───────────────────────────┘
+                           │
+                           ▼
+┌──────────────────────────────────────────────────────┐
+│ Tela de revisão (individual ou batch review)         │
+│   → professor ajusta respostas                       │
+│   → professor confirma/troca aluno                   │
+└──────────────────────────┬───────────────────────────┘
+                           │
+                           ▼
+┌──────────────────────────────────────────────────────┐
+│ utils/grading.ts                                     │
+│ score = (Σ pesos_corretos / Σ pesos) * 10            │
+└──────────────────────────┬───────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────┐
+│  Salva Correction no AsyncStorage   │
+│  + reset para ExamDetail            │
+└──────────────┬──────────────────────┘
+               │
+               ▼
 ┌──────────────────────────────────────┐
-│ expo-image-manipulator               │
-│ → resize 1024px + compress JPEG 0.7  │
-│ → base64                              │
-└────────┬─────────────────────────────┘
-         │
-         ▼
-┌──────────────────────────────────────┐
-│ POST gemini-3.1-flash-lite           │
-│ ├─ prompt com lista de questões      │
-│ │  (número + alternativas válidas)   │
-│ ├─ imagens em inline_data            │
-│ └─ responseSchema JSON               │
-└────────┬─────────────────────────────┘
-         │ JSON estruturado
-         ▼
-┌──────────────────┐
-│ Tela de revisão  │  ← professor edita se necessário
-│ (toque = trocar) │
-└────────┬─────────┘
-         │
-         ▼
-┌────────────────────────────────────────┐
-│ utils/grading.ts                       │
-│ score = (Σ pesos_corretos / Σ pesos)*10│
-└────────┬───────────────────────────────┘
-         │
-         ▼
-┌──────────────────┐    ┌──────────────────┐
-│  Tela de         │───▶│ Salva Correction │
-│  resultado       │    │ no AsyncStorage  │
-└──────────────────┘    └──────────────────┘
-                                │
-                                ▼
-                       ┌──────────────────┐
-                       │ Exporta CSV da   │
-                       │ turma quando     │
-                       │ desejar          │
-                       └──────────────────┘
+│ Exporta CSV da turma quando desejar  │
+└──────────────────────────────────────┘
 ```
 
 ---
@@ -184,11 +212,15 @@ Professor abre app
 
 ```
 prova-facil/
-├── App.tsx                              # entry point com PaperProvider + Navigator
+├── App.tsx                              # entry point com ToastProvider + AppNavigator
 ├── app.json                             # config Expo (iOS bundleId, permissões)
 ├── package.json                         # deps Expo SDK 54
-├── babel.config.js                      # preset-expo
-├── tsconfig.json                        # TypeScript strict
+├── babel.config.js                      # preset-expo + nativewind
+├── metro.config.js                      # withNativeWind(config, { input: './global.css' })
+├── tailwind.config.js                   # paleta brand/accent/success/warn/danger/ink/bg/line
+├── global.css                           # @tailwind base/components/utilities
+├── nativewind-env.d.ts                  # tipos do NativeWind v4
+├── tsconfig.json                        # strict + paths { "@/*": ["./src/*"] }
 ├── .env.example                         # template das variáveis de ambiente
 │
 ├── docs/
@@ -196,36 +228,58 @@ prova-facil/
 │   └── ARCHITECTURE.md                  # documentação técnica detalhada
 │
 └── src/
-    ├── theme.ts                         # design tokens (cores, spacing, radius)
+    ├── theme.ts                         # design tokens (cores/spacing/radius/elevation/scoreColor/scoreLabel)
+    │
+    ├── lib/
+    │   └── utils.ts                     # helper cn() (clsx + tailwind-merge)
     │
     ├── types/
-    │   └── index.ts                     # Exam, Question, Correction, QuestionType
+    │   └── index.ts                     # QuestionType, Class, Student, Exam, Question, Correction
     │
     ├── services/
-    │   ├── storage.ts                   # CRUD em AsyncStorage
-    │   ├── geminiVision.ts              # cliente Gemini Vision com responseSchema
+    │   ├── storage.ts                   # CRUD AsyncStorage (classes/students/exams/corrections) + migração v1→v2
+    │   ├── geminiVision.ts              # detectAnswers + detectBatch (responseSchema)
     │   └── csvExport.ts                 # geração e compartilhamento de CSV
     │
     ├── utils/
-    │   └── grading.ts                   # cálculo de nota ponderada 0–10
+    │   └── grading.ts                   # cálculo de nota ponderada 0–10 + getOptionsForType
     │
     ├── components/
-    │   ├── AnswerCell.tsx               # célula clicável A/B/C/D/E/V/F
-    │   ├── QuestionRow.tsx              # editor de uma questão
+    │   ├── ui/                          # componentes nativecn-style (substituem react-native-paper)
+    │   │   ├── Button.tsx               # variants: default | secondary | ghost | tonal | destructive | link
+    │   │   ├── Input.tsx                # TextInput estilizado com label estático
+    │   │   ├── Dialog.tsx               # Modal RN + DialogTitle/Content/ScrollArea/Actions
+    │   │   ├── Toast.tsx                # ToastProvider + useToast() hook
+    │   │   ├── Tabs.tsx                 # Tabs/TabsList/TabsTrigger/TabsContent (controlado opcional)
+    │   │   ├── Card.tsx                 # Card / CardHeader / CardTitle / CardContent / CardFooter
+    │   │   ├── Badge.tsx                # default | secondary | destructive | success | warn
+    │   │   ├── Fab.tsx                  # FAB com Ionicons + label
+    │   │   ├── IconButton.tsx           # Pressable circular com Ionicons
+    │   │   ├── SegmentedControl.tsx     # controlado (value / onValueChange / options[])
+    │   │   └── Spinner.tsx              # wrapper sobre ActivityIndicator
+    │   ├── AnswerCell.tsx               # célula clicável A/B/C/D/E/V/F (default/selected/correct/wrong/unknown)
+    │   ├── QuestionRow.tsx              # editor de uma questão (tipo/resposta/peso)
     │   ├── StatCard.tsx                 # card de métrica
     │   ├── ScoreBadge.tsx               # badge colorido com a nota
     │   ├── EmptyState.tsx               # estado vazio com emoji + CTA
-    │   └── SectionHeader.tsx            # cabeçalho de seção tipográfico
+    │   ├── SectionHeader.tsx            # cabeçalho de seção tipográfico
+    │   └── ClassMultiSelectDialog.tsx   # seleção de múltiplas turmas com criar nova
     │
     ├── navigation/
-    │   └── AppNavigator.tsx             # stack tipado (RootStackParamList)
+    │   └── AppNavigator.tsx             # RootStack + bottom tabs (Home/TurmasTab/ProvasTab)
     │
     └── screens/
-        ├── HomeScreen.tsx               # dashboard + lista de provas
-        ├── CreateExamScreen.tsx         # cadastro de prova com questões
-        ├── ExamDetailScreen.tsx         # gabarito + correções + exportar
-        ├── CaptureScreen.tsx            # nome do aluno + fotos
-        ├── ReviewScreen.tsx             # revisão das respostas detectadas
+        ├── HomeScreen.tsx               # dashboard com stats + ações rápidas + provas recentes
+        ├── ClassesScreen.tsx            # lista de turmas (aba Turmas)
+        ├── ClassDetailScreen.tsx        # alunos da turma + provas atribuídas
+        ├── ExamsScreen.tsx              # lista de provas (aba Provas)
+        ├── CreateExamScreen.tsx         # cadastro de prova (multi-turma)
+        ├── EditExamScreen.tsx           # edição de prova existente
+        ├── ExamDetailScreen.tsx         # gabarito + correções por turma + CSV
+        ├── CaptureScreen.tsx            # selecionar aluno + fotos (correção individual)
+        ├── BatchCaptureScreen.tsx       # selecionar turma + N fotos (correção em lote)
+        ├── BatchReviewScreen.tsx        # revisão lote (IA + match de aluno + ScoreBadge)
+        ├── ReviewScreen.tsx             # revisão individual das respostas detectadas
         └── ResultScreen.tsx             # nota final + detalhe por questão
 ```
 
@@ -292,10 +346,23 @@ interface Question {
   weight: number;          // peso da questão (somatório livre)
 }
 
+interface Class {
+  id: string;
+  name: string;
+  createdAt: string;       // ISO 8601
+}
+
+interface Student {
+  id: string;
+  classId: string;         // FK → Class
+  name: string;
+  createdAt: string;       // ISO 8601
+}
+
 interface Exam {
   id: string;
   name: string;
-  className: string;       // turma
+  classIds: string[];      // turmas atribuídas (multi)
   createdAt: string;       // ISO 8601
   questions: Question[];
 }
@@ -303,15 +370,19 @@ interface Exam {
 interface Correction {
   id: string;
   examId: string;
-  studentName: string;
+  studentId: string | null;     // FK → Student (null se não identificado)
+  studentNameRaw: string | null; // o que a IA leu (mesmo sem match)
   photoUris: string[];
   detectedAnswers: Record<string, string>;  // questionId → 'A'|'B'|...|'?'
   score: number;                            // 0-10
   hits: number;
   misses: number;
   correctedAt: string;                      // ISO 8601
+  identified: boolean;                      // tinha match com aluno cadastrado?
 }
 ```
+
+> **Migração v1 → v2:** dados gravados antes da introdução de turmas/alunos são migrados automaticamente na primeira leitura (`@provafacil/migration_v2_done`). Provas com `className` viram `classIds: [<gerado>]`; correções com `studentName` ganham `studentId` quando há match na turma da prova.
 
 ### Cálculo da nota
 
@@ -323,13 +394,27 @@ nota = (notaPonderada / totalPeso) * 10
 
 A nota é arredondada para **uma casa decimal**, no padrão brasileiro (0–10).
 
+### Paleta de cores (design tokens)
+
+| Token | Hex | Uso |
+|---|---|---|
+| `primary` | `#2C5F9E` | brand azul, ações primárias, FABs |
+| `accent` | `#FFC107` | destaques amarelos (chips, ícones de status) |
+| `success` | `#16A34A` | resposta correta, toast de sucesso |
+| `warning` | `#F59E0B` | indicações pendentes, aviso |
+| `danger` | `#EF4444` | exclusão, resposta errada |
+| `bg` | `#F5F5F0` | fundo da app (warm) |
+| `surface` | `#FFFFFF` | cards e dialogs |
+| `text` | `#333333` | texto principal |
+| `secondary` | `#7E8BA3` | texto secundário/muted, bordas suaves |
+
 ### Classificação
 
-| Nota | Status | Cor |
+| Nota | Status | Cor (scoreColor) |
 |---|---|---|
-| ≥ 7,0 | Aprovado | Verde (`#16a34a`) |
-| 5,0 – 6,9 | Recuperação | Amarelo (`#d97706`) |
-| < 5,0 | Reprovado | Vermelho (`#dc2626`) |
+| ≥ 7,0 | Aprovado | Verde (`#16A34A`) |
+| 5,0 – 6,9 | Recuperação | Amarelo escuro (`#D97706`) |
+| < 5,0 | Reprovado | Vermelho (`#DC2626`) |
 
 ---
 

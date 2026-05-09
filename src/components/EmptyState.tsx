@@ -1,6 +1,6 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { StyleSheet, Text, View } from 'react-native';
+import { Button } from './ui/Button';
 import { colors, radius, spacing } from '../theme';
 
 interface Props {
@@ -20,7 +20,7 @@ export function EmptyState({ emoji, title, description, actionLabel, onAction }:
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
       {actionLabel && onAction ? (
-        <Button mode="contained" onPress={onAction} style={{ marginTop: spacing.lg }}>
+        <Button onPress={onAction} style={{ marginTop: spacing.lg }}>
           {actionLabel}
         </Button>
       ) : null}

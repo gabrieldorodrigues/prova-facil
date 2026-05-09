@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
@@ -8,12 +9,15 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  Text,
   View,
 } from 'react-native';
-import { Button, Snackbar, Text, TextInput } from 'react-native-paper';
 import { ClassMultiSelectDialog } from '../components/ClassMultiSelectDialog';
 import { QuestionRow } from '../components/QuestionRow';
 import { SectionHeader } from '../components/SectionHeader';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { useToast } from '../components/ui/Toast';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { classStorage, examStorage } from '../services/storage';
 import { Class, Exam, Question } from '../types';
@@ -39,7 +43,7 @@ export function EditExamScreen({ route, navigation }: Props) {
   const [classes, setClasses] = useState<Class[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [original, setOriginal] = useState<Exam | null>(null);
-  const [snack, setSnack] = useState<string | null>(null);
+  const { toast } = useToast();
   const [showClassPicker, setShowClassPicker] = useState(false);
 
   useEffect(() => {
@@ -81,7 +85,7 @@ export function EditExamScreen({ route, navigation }: Props) {
 
   const removeQuestion = (idx: number) => {
     if (questions.length === 1) {
-      setSnack('A prova precisa de pelo menos uma questão.');
+      toast('A prova precisa de pelo menos uma questão.', 'info', 2200);
       return;
     }
     setQuestions((prev) =>
@@ -95,7 +99,7 @@ export function EditExamScreen({ route, navigation }: Props) {
   const distributeEvenly = () => {
     const per = Math.round((10 / questions.length) * 100) / 100;
     setQuestions((prev) => prev.map((q) => ({ ...q, weight: per })));
-    setSnack(`Pesos distribuídos: ${per} por questão.`);
+    toast(`Pesos distribuídos: ${per} por questão.`, 'success', 2200);
   };
 
   const toggleClass = (id: string) =>
@@ -142,14 +146,11 @@ export function EditExamScreen({ route, navigation }: Props) {
           <Text className="text-[12px] font-bold text-ink-muted uppercase tracking-wider mb-3">
             Informações da prova
           </Text>
-          <TextInput
+          <Input
             label="Nome da prova"
-            mode="outlined"
             value={name}
             onChangeText={setName}
-            outlineColor={colors.border}
-            activeOutlineColor={colors.primary}
-            style={{ backgroundColor: '#ffffff', marginBottom: 12 }}
+            containerClasses="mb-3"
           />
 
           <View className="flex-row justify-between items-baseline mb-2">
@@ -222,11 +223,10 @@ export function EditExamScreen({ route, navigation }: Props) {
             </Text>
           </View>
           <Button
-            mode="text"
-            compact
+            variant="ghost"
+            size="sm"
             onPress={distributeEvenly}
-            textColor={colors.primary}
-            icon="scale-balance"
+            iconLeft={<Ionicons name="scale-outline" size={16} color={colors.primary} />}
           >
             Distribuir = 10
           </Button>
@@ -242,30 +242,24 @@ export function EditExamScreen({ route, navigation }: Props) {
         ))}
 
         <Button
-          mode="outlined"
-          icon="plus"
+          variant="secondary"
+          iconLeft={<Ionicons name="add" size={18} color={colors.primary} />}
           onPress={addQuestion}
-          textColor={colors.primary}
           style={{ marginTop: 8 }}
         >
           Adicionar questão
         </Button>
 
         <Button
-          mode="contained"
+          size="lg"
           onPress={handleSave}
           disabled={!isValid}
-          icon="content-save"
+          iconLeft={<Ionicons name="save-outline" size={18} color="#ffffff" />}
           style={{ marginTop: 24 }}
-          contentStyle={{ paddingVertical: 8 }}
         >
           Salvar alterações
         </Button>
       </ScrollView>
-
-      <Snackbar visible={!!snack} onDismiss={() => setSnack(null)} duration={2200}>
-        {snack ?? ''}
-      </Snackbar>
 
       <ClassMultiSelectDialog
         visible={showClassPicker}

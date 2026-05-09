@@ -2,9 +2,10 @@ import { CommonActions } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Ionicons } from '@expo/vector-icons';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AnswerCell } from '../components/AnswerCell';
+import { Button } from '../components/ui/Button';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { correctionStorage, examStorage } from '../services/storage';
 import { Exam } from '../types';
@@ -54,7 +55,7 @@ export function ResultScreen({ route, navigation }: Props) {
       navigation.dispatch(
         CommonActions.reset({
           index: 1,
-          routes: [{ name: 'Home' }, { name: 'ExamDetail', params: { examId } }],
+          routes: [{ name: 'MainTabs' }, { name: 'ExamDetail', params: { examId } }],
         }),
       );
     } catch (err) {
@@ -145,19 +146,18 @@ export function ResultScreen({ route, navigation }: Props) {
 
       <View style={styles.bottomBar}>
         <Button
-          mode="outlined"
+          variant="secondary"
           onPress={() => navigation.goBack()}
-          style={{ flex: 1, borderColor: colors.border }}
-          textColor={colors.textSecondary}
+          style={{ flex: 1 }}
+          className="border-line"
+          labelClasses="text-ink-muted"
         >
           Revisar
         </Button>
         <View style={{ width: spacing.sm }} />
         <Button
-          mode="contained"
-          icon="check"
+          iconLeft={<Ionicons name="checkmark" size={18} color="#ffffff" />}
           style={{ flex: 2 }}
-          contentStyle={{ paddingVertical: 4 }}
           onPress={handleSave}
           loading={saving}
           disabled={saving}

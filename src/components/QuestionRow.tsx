@@ -1,10 +1,12 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { IconButton, SegmentedButtons, Text, TextInput } from 'react-native-paper';
+import { StyleSheet, Text, View } from 'react-native';
 import { Question, QUESTION_TYPE_LABEL, QuestionType } from '../types';
 import { getOptionsForType } from '../utils/grading';
 import { colors, elevation, radius, spacing } from '../theme';
 import { AnswerCell } from './AnswerCell';
+import { IconButton } from './ui/IconButton';
+import { Input } from './ui/Input';
+import { SegmentedControl } from './ui/SegmentedControl';
 
 interface Props {
   question: Question;
@@ -15,8 +17,7 @@ interface Props {
 export function QuestionRow({ question, onChange, onRemove }: Props) {
   const options = getOptionsForType(question.type);
 
-  const handleTypeChange = (type: string) => {
-    const newType = type as QuestionType;
+  const handleTypeChange = (newType: QuestionType) => {
     const newOpts = getOptionsForType(newType);
     const stillValid = newOpts.includes(question.correctAnswer);
     onChange({
@@ -43,25 +44,26 @@ export function QuestionRow({ question, onChange, onRemove }: Props) {
         <Text style={styles.title}>Questão {question.number}</Text>
         <View style={{ flex: 1 }} />
         <IconButton
-          icon="delete-outline"
+          icon="trash-outline"
           size={20}
-          iconColor={colors.danger}
+          color={colors.danger}
+          accessibilityLabel={`Remover questão ${question.number}`}
           onPress={onRemove}
         />
       </View>
 
       <Text style={styles.fieldLabel}>Tipo de questão</Text>
-      <SegmentedButtons
-        value={question.type}
-        onValueChange={handleTypeChange}
-        density="small"
-        buttons={[
-          { value: 'mc5', label: QUESTION_TYPE_LABEL.mc5 },
-          { value: 'mc4', label: QUESTION_TYPE_LABEL.mc4 },
-          { value: 'tf', label: QUESTION_TYPE_LABEL.tf },
-        ]}
-        style={{ marginBottom: spacing.md }}
-      />
+      <View style={{ marginBottom: spacing.md }}>
+        <SegmentedControl<QuestionType>
+          value={question.type}
+          onValueChange={handleTypeChange}
+          options={[
+            { value: 'mc5', label: QUESTION_TYPE_LABEL.mc5 },
+            { value: 'mc4', label: QUESTION_TYPE_LABEL.mc4 },
+            { value: 'tf', label: QUESTION_TYPE_LABEL.tf },
+          ]}
+        />
+      </View>
 
       <Text style={styles.fieldLabel}>Resposta correta</Text>
       <View style={styles.cells}>
@@ -75,15 +77,12 @@ export function QuestionRow({ question, onChange, onRemove }: Props) {
         ))}
       </View>
 
-      <TextInput
+      <Input
         label="Peso"
-        mode="outlined"
-        dense
         keyboardType="decimal-pad"
         value={String(question.weight)}
         onChangeText={handleWeight}
-        style={{ marginTop: spacing.sm }}
-        outlineColor={colors.border}
+        containerClasses="mt-2"
       />
     </View>
   );

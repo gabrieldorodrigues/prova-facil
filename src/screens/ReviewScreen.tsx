@@ -1,8 +1,9 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Ionicons } from '@expo/vector-icons';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AnswerCell } from '../components/AnswerCell';
+import { Button } from '../components/ui/Button';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { detectAnswers, GeminiKeyMissingError } from '../services/geminiVision';
 import { examStorage } from '../services/storage';
@@ -150,9 +151,8 @@ export function ReviewScreen({ route, navigation }: Props) {
 
       <View style={styles.bottomBar}>
         <Button
-          mode="contained"
-          icon="calculator-variant"
-          contentStyle={{ paddingVertical: spacing.sm }}
+          size="lg"
+          iconLeft={<Ionicons name="calculator-outline" size={20} color="#ffffff" />}
           onPress={() =>
             navigation.navigate('Result', {
               examId,

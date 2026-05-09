@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
@@ -6,11 +7,18 @@ import {
   FlatList,
   Image,
   Pressable,
-  ScrollView,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
-import { Button, Dialog, IconButton, Portal, Text } from 'react-native-paper';
+import { Button } from '../components/ui/Button';
+import {
+  Dialog,
+  DialogActions,
+  DialogScrollArea,
+  DialogTitle,
+} from '../components/ui/Dialog';
+import { IconButton } from '../components/ui/IconButton';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { classStorage, examStorage } from '../services/storage';
 import { Class } from '../types';
@@ -109,42 +117,59 @@ export function BatchCaptureScreen({ route, navigation }: Props) {
           </View>
 
           <Text style={styles.fieldLabel}>Turma do lote</Text>
-          <Pressable
-            onPress={() => setShowClassPicker(true)}
-            style={({ pressed }) => [
-              styles.classPicker,
-              pressed && { opacity: 0.85 },
-              !selectedClass && styles.classPickerEmpty,
-            ]}
-          >
-            {selectedClass ? (
-              <>
-                <View style={styles.smallAvatar}>
-                  <Text style={styles.smallAvatarText}>
-                    {selectedClass.name.charAt(0).toUpperCase()}
-                  </Text>
-                </View>
-                <Text style={styles.classPickerName}>{selectedClass.name}</Text>
-              </>
-            ) : (
-              <Text style={styles.classPickerHint}>🏫 Selecionar turma</Text>
-            )}
-            <Text style={styles.chevron}>›</Text>
-          </Pressable>
+          {selectedClass ? (
+            <Pressable
+              onPress={() => setShowClassPicker(true)}
+              className="flex-row items-center bg-brand-50 rounded-xl p-3 gap-3 active:opacity-85"
+            >
+              <View className="w-10 h-10 rounded-full bg-brand-500 items-center justify-center">
+                <Text className="text-white font-extrabold text-[16px]">
+                  {selectedClass.name.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+              <Text
+                className="flex-1 text-[16px] font-bold text-brand-700"
+                numberOfLines={1}
+              >
+                {selectedClass.name}
+              </Text>
+              <Text className="text-[13px] font-semibold text-brand-500">
+                Trocar
+              </Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={() => setShowClassPicker(true)}
+              className="flex-row items-center bg-bg-surface border border-line border-dashed rounded-xl p-3 gap-3 active:opacity-85"
+            >
+              <View className="w-10 h-10 rounded-full bg-bg-muted items-center justify-center">
+                <Ionicons name="school-outline" size={20} color={colors.textMuted} />
+              </View>
+              <Text className="flex-1 text-[14px] text-ink-muted font-medium">
+                Toque para selecionar
+              </Text>
+              <Text className="text-[13px] font-semibold text-brand-500">
+                Selecionar
+              </Text>
+            </Pressable>
+          )}
 
           <View style={styles.btnRow}>
-            <Pressable
+            <Button
+              style={{ flex: 1 }}
+              iconLeft={<Ionicons name="camera-outline" size={18} color="#ffffff" />}
               onPress={pickFromCamera}
-              style={({ pressed }) => [styles.primaryBtn, pressed && { opacity: 0.85 }]}
             >
-              <Text style={styles.primaryBtnText}>📷  Câmera</Text>
-            </Pressable>
-            <Pressable
+              Câmera
+            </Button>
+            <Button
+              variant="tonal"
+              style={{ flex: 1 }}
+              iconLeft={<Ionicons name="images-outline" size={18} color={colors.primaryDark} />}
               onPress={pickFromLibrary}
-              style={({ pressed }) => [styles.secondaryBtn, pressed && { opacity: 0.85 }]}
             >
-              <Text style={styles.secondaryBtnText}>🖼  Galeria</Text>
-            </Pressable>
+              Galeria
+            </Button>
           </View>
 
           <View style={styles.counterBox}>
@@ -170,8 +195,9 @@ export function BatchCaptureScreen({ route, navigation }: Props) {
             <IconButton
               icon="close"
               size={14}
-              iconColor="#ffffff"
-              containerColor={colors.danger}
+              color="#ffffff"
+              bgColor={colors.danger}
+              accessibilityLabel="Remover foto"
               style={styles.removeBtn}
               onPress={() => removePhoto(item)}
             />
@@ -181,54 +207,55 @@ export function BatchCaptureScreen({ route, navigation }: Props) {
 
       <View style={styles.bottomBar}>
         <Button
-          mode="contained"
+          size="lg"
           onPress={handleProcess}
           disabled={!isReady}
-          icon="auto-fix"
-          contentStyle={{ paddingVertical: spacing.sm, flexDirection: 'row-reverse' }}
+          iconRight={<Ionicons name="sparkles-outline" size={18} color="#ffffff" />}
         >
           Processar com IA
         </Button>
       </View>
 
-      <Portal>
-        <Dialog
-          visible={showClassPicker}
-          onDismiss={() => setShowClassPicker(false)}
-        >
-          <Dialog.Title>Selecionar turma do lote</Dialog.Title>
-          <Dialog.ScrollArea style={{ paddingHorizontal: 0 }}>
-            <ScrollView>
-              {classes.map((c) => (
-                <Pressable
-                  key={c.id}
-                  onPress={() => {
-                    setClassId(c.id);
-                    setShowClassPicker(false);
-                  }}
-                  style={({ pressed }) => [
-                    styles.dialogRow,
-                    pressed && { backgroundColor: colors.primaryLight },
-                  ]}
-                >
-                  <View style={styles.smallAvatar}>
-                    <Text style={styles.smallAvatarText}>
-                      {c.name.charAt(0).toUpperCase()}
-                    </Text>
-                  </View>
-                  <Text style={styles.dialogRowText}>{c.name}</Text>
-                  {classId === c.id ? (
-                    <Text style={styles.checkmark}>✓</Text>
-                  ) : null}
-                </Pressable>
-              ))}
-            </ScrollView>
-          </Dialog.ScrollArea>
-          <Dialog.Actions>
-            <Button onPress={() => setShowClassPicker(false)}>Fechar</Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+      <Dialog
+        open={showClassPicker}
+        onOpenChange={(o) => !o && setShowClassPicker(false)}
+      >
+        <DialogTitle>Selecionar turma do lote</DialogTitle>
+        <DialogScrollArea>
+          {classes.map((c) => (
+            <Pressable
+              key={c.id}
+              onPress={() => {
+                setClassId(c.id);
+                setShowClassPicker(false);
+              }}
+              className="flex-row items-center py-3 px-5 gap-3 active:bg-brand-50"
+            >
+              <View className="w-9 h-9 rounded-full bg-brand-50 items-center justify-center">
+                <Text className="text-brand-700 font-bold">
+                  {c.name.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+              <Text
+                className="flex-1 text-[15px] text-ink font-medium"
+                numberOfLines={1}
+              >
+                {c.name}
+              </Text>
+              {classId === c.id ? (
+                <Text className="text-brand-500 text-[20px] font-extrabold">
+                  ✓
+                </Text>
+              ) : null}
+            </Pressable>
+          ))}
+        </DialogScrollArea>
+        <DialogActions>
+          <Button variant="ghost" onPress={() => setShowClassPicker(false)}>
+            Fechar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </View>
   );
 }
@@ -253,46 +280,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
   },
-  classPicker: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: colors.primaryLight,
-    gap: spacing.md,
-  },
-  classPickerEmpty: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: colors.border,
-  },
-  classPickerName: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.primaryDark,
-  },
-  classPickerHint: { flex: 1, fontSize: 14, color: colors.textMuted },
-  chevron: { fontSize: 22, color: colors.textMuted },
-
   btnRow: { flexDirection: 'row', marginTop: spacing.lg, gap: spacing.sm },
-  primaryBtn: {
-    flex: 1,
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    alignItems: 'center',
-  },
-  primaryBtnText: { color: '#ffffff', fontWeight: '700', fontSize: 15 },
-  secondaryBtn: {
-    flex: 1,
-    backgroundColor: colors.primaryLight,
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    alignItems: 'center',
-  },
-  secondaryBtnText: { color: colors.primaryDark, fontWeight: '700', fontSize: 15 },
   counterBox: {
     flexDirection: 'row',
     alignItems: 'baseline',
@@ -329,23 +317,4 @@ const styles = StyleSheet.create({
     right: spacing.lg,
     bottom: spacing.lg,
   },
-
-  dialogRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    gap: spacing.md,
-  },
-  smallAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 999,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  smallAvatarText: { color: '#ffffff', fontWeight: '800' },
-  dialogRowText: { flex: 1, fontSize: 15, color: colors.textPrimary, fontWeight: '500' },
-  checkmark: { color: colors.primary, fontSize: 18, fontWeight: '700' },
 });

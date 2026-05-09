@@ -1,6 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius } from '../theme';
 
 type Variant = 'default' | 'selected' | 'correct' | 'wrong' | 'unknown';
@@ -15,7 +14,7 @@ interface Props {
 const STYLES: Record<Variant, { bg: string; fg: string; border: string }> = {
   default: { bg: colors.surface, fg: colors.textSecondary, border: colors.border },
   selected: { bg: colors.primary, fg: '#ffffff', border: colors.primaryDark },
-  correct: { bg: colors.accent, fg: '#ffffff', border: '#059669' },
+  correct: { bg: colors.success, fg: '#ffffff', border: colors.scoreGood },
   wrong: { bg: colors.danger, fg: '#ffffff', border: '#dc2626' },
   unknown: { bg: colors.surfaceMuted, fg: colors.textMuted, border: colors.border },
 };

@@ -1,10 +1,10 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useState } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
-import { FAB, Text } from 'react-native-paper';
+import { FlatList, Pressable, Text, View } from 'react-native';
 import { EmptyState } from '../components/EmptyState';
 import { ScoreBadge } from '../components/ScoreBadge';
+import { Fab } from '../components/ui/Fab';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { classStorage, correctionStorage, examStorage } from '../services/storage';
 import { Class, Exam } from '../types';
@@ -115,16 +115,10 @@ export function ExamsScreen() {
         )}
       />
 
-      <FAB
-        icon="plus"
+      <Fab
+        icon="add"
         label="Nova prova"
-        color="#ffffff"
-        style={{
-          position: 'absolute',
-          right: 16,
-          bottom: 16,
-          backgroundColor: '#4f46e5',
-        }}
+        accessibilityLabel="Criar nova prova"
         onPress={() => navigation.navigate('CreateExam', {})}
       />
     </View>

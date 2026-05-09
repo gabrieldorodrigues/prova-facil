@@ -1,7 +1,6 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Text } from 'react-native-paper';
-import { radius, scoreColor, spacing } from '../theme';
+import { StyleSheet, Text, View } from 'react-native';
+import { radius, scoreColor } from '../theme';
 
 interface Props {
   score: number;

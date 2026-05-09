@@ -1,13 +1,22 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, ScrollView, View } from 'react-native';
-import { Button, Dialog, IconButton, Portal, Snackbar, Text } from 'react-native-paper';
+import { Alert, ScrollView, Text, View } from 'react-native';
 import { AnswerCell } from '../components/AnswerCell';
 import { EmptyState } from '../components/EmptyState';
 import { ScoreBadge } from '../components/ScoreBadge';
 import { SectionHeader } from '../components/SectionHeader';
 import { StatCard } from '../components/StatCard';
+import { Button } from '../components/ui/Button';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from '../components/ui/Dialog';
+import { IconButton } from '../components/ui/IconButton';
+import { useToast } from '../components/ui/Toast';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { exportCorrectionsCSV } from '../services/csvExport';
 import {
@@ -36,7 +45,7 @@ export function ExamDetailScreen({ route, navigation }: Props) {
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [corrections, setCorrections] = useState<Correction[]>([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [snack, setSnack] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const load = useCallback(async () => {
     const e = await examStorage.get(examId);
@@ -110,7 +119,7 @@ export function ExamDetailScreen({ route, navigation }: Props) {
 
   const handleExport = async () => {
     if (corrections.length === 0) {
-      setSnack('Corrija pelo menos um aluno antes de exportar.');
+      toast('Corrija pelo menos um aluno antes de exportar.', 'info', 2400);
       return;
     }
     try {
@@ -155,13 +164,15 @@ export function ExamDetailScreen({ route, navigation }: Props) {
               <IconButton
                 icon="pencil-outline"
                 size={20}
-                iconColor={colors.primary}
+                color={colors.primary}
+                accessibilityLabel="Editar prova"
                 onPress={() => navigation.navigate('EditExam', { examId })}
               />
               <IconButton
-                icon="trash-can-outline"
+                icon="trash-outline"
                 size={20}
-                iconColor={colors.danger}
+                color={colors.danger}
+                accessibilityLabel="Excluir prova"
                 onPress={() => setConfirmDelete(true)}
               />
             </View>
@@ -203,31 +214,27 @@ export function ExamDetailScreen({ route, navigation }: Props) {
         <View className="mt-4 gap-1">
           <View className="flex-row items-center">
             <Button
-              mode="contained"
-              icon="auto-fix"
+              iconLeft={<Ionicons name="sparkles-outline" size={18} color="#ffffff" />}
               onPress={() => navigation.navigate('BatchCapture', { examId })}
               style={{ flex: 1 }}
-              contentStyle={{ paddingVertical: 4 }}
             >
               Corrigir em lote
             </Button>
             <View className="w-2" />
             <Button
-              mode="outlined"
-              icon="download"
+              variant="secondary"
+              iconLeft={<Ionicons name="download-outline" size={18} color={colors.primary} />}
               onPress={handleExport}
-              textColor={colors.primary}
-              style={{ borderColor: colors.primary }}
             >
               CSV
             </Button>
           </View>
 
           <Button
-            mode="text"
-            icon="account-plus"
+            variant="ghost"
+            iconLeft={<Ionicons name="person-add-outline" size={18} color="#475569" />}
+            labelClasses="text-ink-muted"
             onPress={() => navigation.navigate('Capture', { examId })}
-            textColor={colors.textSecondary}
           >
             Corrigir um aluno por vez
           </Button>
@@ -292,27 +299,23 @@ export function ExamDetailScreen({ route, navigation }: Props) {
         )}
       </ScrollView>
 
-      <Portal>
-        <Dialog visible={confirmDelete} onDismiss={() => setConfirmDelete(false)}>
-          <Dialog.Title>Excluir prova?</Dialog.Title>
-          <Dialog.Content>
-            <Text>
-              Esta ação remove a prova e todas as correções dos alunos. Não é possível
-              desfazer.
-            </Text>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setConfirmDelete(false)}>Cancelar</Button>
-            <Button textColor={colors.danger} onPress={handleDelete}>
-              Excluir
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
-
-      <Snackbar visible={!!snack} onDismiss={() => setSnack(null)} duration={2400}>
-        {snack ?? ''}
-      </Snackbar>
+      <Dialog open={confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(false)}>
+        <DialogTitle>Excluir prova?</DialogTitle>
+        <DialogContent>
+          <Text className="text-[14px] text-ink-muted">
+            Esta ação remove a prova e todas as correções dos alunos. Não é possível
+            desfazer.
+          </Text>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="ghost" onPress={() => setConfirmDelete(false)}>
+            Cancelar
+          </Button>
+          <Button variant="destructive" onPress={handleDelete}>
+            Excluir
+          </Button>
+        </DialogActions>
+      </Dialog>
     </View>
   );
 }

@@ -1,11 +1,15 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import {
+  CompositeNavigationProp,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { ScoreBadge } from '../components/ScoreBadge';
 import { StatCard } from '../components/StatCard';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList, TabParamList } from '../navigation/AppNavigator';
 import {
   classStorage,
   correctionStorage,
@@ -15,7 +19,10 @@ import {
 import { Class, Correction, Exam } from '../types';
 import { colors } from '../theme';
 
-type Nav = NativeStackNavigationProp<RootStackParamList>;
+type Nav = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList, 'Home'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 interface ExamRow extends Exam {
   classNames: string[];
@@ -125,9 +132,9 @@ export function HomeScreen() {
       <View className="flex-row gap-2">
         <QuickAction
           emoji="🏫"
-          label="Turmas"
-          hint={`${classCount} cadastrada(s)`}
-          onPress={() => navigation.getParent()?.navigate('TurmasTab' as never)}
+          label="Nova turma"
+          hint="cadastrar"
+          onPress={() => navigation.navigate('TurmasTab', { openCreate: true })}
         />
         <QuickAction
           emoji="📝"
@@ -144,7 +151,7 @@ export function HomeScreen() {
               Provas recentes
             </Text>
             <Pressable
-              onPress={() => navigation.getParent()?.navigate('ProvasTab' as never)}
+              onPress={() => navigation.navigate('ProvasTab')}
               hitSlop={8}
               className="active:opacity-60"
             >

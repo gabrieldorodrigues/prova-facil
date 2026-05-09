@@ -1,16 +1,24 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import {
+  RouteProp,
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import React, { useCallback, useState } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
-import { Button, Dialog, FAB, Portal, Text, TextInput } from 'react-native-paper';
+import { FlatList, Pressable, Text, View } from 'react-native';
 import { EmptyState } from '../components/EmptyState';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { Button } from '../components/ui/Button';
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '../components/ui/Dialog';
+import { Fab } from '../components/ui/Fab';
+import { Input } from '../components/ui/Input';
+import { RootStackParamList, TabParamList } from '../navigation/AppNavigator';
 import { classStorage, examStorage, studentStorage } from '../services/storage';
 import { Class } from '../types';
-import { colors } from '../theme';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+type Route = RouteProp<TabParamList, 'TurmasTab'>;
 
 interface ClassWithStats extends Class {
   studentCount: number;
@@ -19,6 +27,7 @@ interface ClassWithStats extends Class {
 
 export function ClassesScreen() {
   const navigation = useNavigation<Nav>();
+  const route = useRoute<Route>();
   const [classes, setClasses] = useState<ClassWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
@@ -40,7 +49,11 @@ export function ClassesScreen() {
   useFocusEffect(
     useCallback(() => {
       load();
-    }, [load]),
+      if (route.params?.openCreate) {
+        setShowDialog(true);
+        navigation.setParams({ openCreate: undefined } as never);
+      }
+    }, [load, route.params?.openCreate, navigation]),
   );
 
   const handleCreate = async () => {
@@ -115,16 +128,10 @@ export function ClassesScreen() {
         )}
       />
 
-      <FAB
-        icon="plus"
+      <Fab
+        icon="add"
         label="Nova turma"
-        color="#ffffff"
-        style={{
-          position: 'absolute',
-          right: 16,
-          bottom: 16,
-          backgroundColor: colors.primary,
-        }}
+        accessibilityLabel="Criar nova turma"
         onPress={() => setShowDialog(true)}
       />
 
@@ -149,28 +156,25 @@ interface DialogProps {
 
 function CreateDialog({ visible, name, onChangeName, onClose, onCreate }: DialogProps) {
   return (
-    <Portal>
-      <Dialog visible={visible} onDismiss={onClose}>
-        <Dialog.Title>Nova turma</Dialog.Title>
-        <Dialog.Content>
-          <TextInput
-            label="Nome da turma"
-            mode="outlined"
-            value={name}
-            onChangeText={onChangeName}
-            placeholder="Ex.: 9º A — Manhã"
-            autoFocus
-            outlineColor={colors.border}
-            activeOutlineColor={colors.primary}
-          />
-        </Dialog.Content>
-        <Dialog.Actions>
-          <Button onPress={onClose}>Cancelar</Button>
-          <Button onPress={onCreate} disabled={!name.trim()}>
-            Criar
-          </Button>
-        </Dialog.Actions>
-      </Dialog>
-    </Portal>
+    <Dialog open={visible} onOpenChange={(o) => !o && onClose()}>
+      <DialogTitle>Nova turma</DialogTitle>
+      <DialogContent>
+        <Input
+          label="Nome da turma"
+          value={name}
+          onChangeText={onChangeName}
+          placeholder="Ex.: 9º A — Manhã"
+          autoFocus
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button variant="ghost" onPress={onClose}>
+          Cancelar
+        </Button>
+        <Button onPress={onCreate} disabled={!name.trim()}>
+          Criar
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }

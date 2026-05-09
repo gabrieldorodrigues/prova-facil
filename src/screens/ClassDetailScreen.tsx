@@ -1,11 +1,20 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import React, { useCallback, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
-import { Button, Dialog, IconButton, Portal, Text, TextInput } from 'react-native-paper';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { EmptyState } from '../components/EmptyState';
 import { SectionHeader } from '../components/SectionHeader';
+import { Button } from '../components/ui/Button';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from '../components/ui/Dialog';
+import { IconButton } from '../components/ui/IconButton';
+import { Input } from '../components/ui/Input';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import {
   classStorage,
@@ -87,9 +96,10 @@ export function ClassDetailScreen({ route, navigation }: Props) {
             </Text>
           </View>
           <IconButton
-            icon="trash-can-outline"
+            icon="trash-outline"
             size={20}
-            iconColor={colors.danger}
+            color={colors.danger}
+            accessibilityLabel="Excluir turma"
             onPress={() => setShowDeleteCls(true)}
           />
         </View>
@@ -99,9 +109,9 @@ export function ClassDetailScreen({ route, navigation }: Props) {
           right={
             students.length > 0 ? (
               <Button
-                mode="contained-tonal"
-                compact
-                icon="plus"
+                variant="tonal"
+                size="sm"
+                iconLeft={<Ionicons name="add" size={16} color={colors.primaryDark} />}
                 onPress={() => setShowAddStudent(true)}
               >
                 Adicionar
@@ -192,46 +202,45 @@ export function ClassDetailScreen({ route, navigation }: Props) {
         )}
       </ScrollView>
 
-      <Portal>
-        <Dialog visible={showAddStudent} onDismiss={() => setShowAddStudent(false)}>
-          <Dialog.Title>Novo aluno</Dialog.Title>
-          <Dialog.Content>
-            <TextInput
-              label="Nome do aluno"
-              mode="outlined"
-              value={studentName}
-              onChangeText={setStudentName}
-              placeholder="Ex.: João Silva"
-              autoFocus
-              autoCapitalize="words"
-              outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
-            />
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setShowAddStudent(false)}>Cancelar</Button>
-            <Button onPress={handleAddStudent} disabled={!studentName.trim()}>
-              Adicionar
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
+      <Dialog open={showAddStudent} onOpenChange={(o) => !o && setShowAddStudent(false)}>
+        <DialogTitle>Novo aluno</DialogTitle>
+        <DialogContent>
+          <Input
+            label="Nome do aluno"
+            value={studentName}
+            onChangeText={setStudentName}
+            placeholder="Ex.: João Silva"
+            autoFocus
+            autoCapitalize="words"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button variant="ghost" onPress={() => setShowAddStudent(false)}>
+            Cancelar
+          </Button>
+          <Button onPress={handleAddStudent} disabled={!studentName.trim()}>
+            Adicionar
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-        <Dialog visible={showDeleteCls} onDismiss={() => setShowDeleteCls(false)}>
-          <Dialog.Title>Excluir turma?</Dialog.Title>
-          <Dialog.Content>
-            <Text>
-              Esta ação remove a turma e todos os alunos. As provas que pertencem a
-              outras turmas continuam, mas perderão a vinculação com esta.
-            </Text>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setShowDeleteCls(false)}>Cancelar</Button>
-            <Button textColor={colors.danger} onPress={handleDeleteClass}>
-              Excluir
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+      <Dialog open={showDeleteCls} onOpenChange={(o) => !o && setShowDeleteCls(false)}>
+        <DialogTitle>Excluir turma?</DialogTitle>
+        <DialogContent>
+          <Text className="text-[14px] text-ink-muted">
+            Esta ação remove a turma e todos os alunos. As provas que pertencem a
+            outras turmas continuam, mas perderão a vinculação com esta.
+          </Text>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="ghost" onPress={() => setShowDeleteCls(false)}>
+            Cancelar
+          </Button>
+          <Button variant="destructive" onPress={handleDeleteClass}>
+            Excluir
+          </Button>
+        </DialogActions>
+      </Dialog>
     </View>
   );
 }

@@ -1,6 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import { StyleSheet, Text, View } from 'react-native';
 import { colors, elevation, radius, spacing } from '../theme';
 
 interface Props {

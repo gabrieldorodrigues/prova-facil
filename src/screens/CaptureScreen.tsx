@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import * as ImagePicker from 'expo-image-picker';
@@ -9,18 +10,20 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
+import { Button } from '../components/ui/Button';
 import {
-  Button,
   Dialog,
-  IconButton,
-  Portal,
-  Text,
-  TextInput,
-} from 'react-native-paper';
+  DialogActions,
+  DialogContent,
+  DialogScrollArea,
+  DialogTitle,
+} from '../components/ui/Dialog';
+import { IconButton } from '../components/ui/IconButton';
+import { Input } from '../components/ui/Input';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { classStorage, examStorage, studentStorage } from '../services/storage';
 import { Class, Student } from '../types';
@@ -195,18 +198,21 @@ export function CaptureScreen({ route, navigation }: Props) {
           </Text>
 
           <View style={styles.photoButtons}>
-            <Pressable
+            <Button
+              style={{ flex: 1 }}
+              iconLeft={<Ionicons name="camera-outline" size={18} color="#ffffff" />}
               onPress={pickFromCamera}
-              style={({ pressed }) => [styles.primaryBtn, pressed && { opacity: 0.85 }]}
             >
-              <Text style={styles.primaryBtnText}>📷  Tirar foto</Text>
-            </Pressable>
-            <Pressable
+              Tirar foto
+            </Button>
+            <Button
+              variant="tonal"
+              style={{ flex: 1 }}
+              iconLeft={<Ionicons name="images-outline" size={18} color={colors.primaryDark} />}
               onPress={pickFromLibrary}
-              style={({ pressed }) => [styles.secondaryBtn, pressed && { opacity: 0.85 }]}
             >
-              <Text style={styles.secondaryBtnText}>🖼  Galeria</Text>
-            </Pressable>
+              Galeria
+            </Button>
           </View>
 
           <Text style={styles.photoCount}>
@@ -231,8 +237,9 @@ export function CaptureScreen({ route, navigation }: Props) {
             <IconButton
               icon="close"
               size={18}
-              iconColor="#ffffff"
-              containerColor={colors.danger}
+              color="#ffffff"
+              bgColor={colors.danger}
+              accessibilityLabel="Remover foto"
               style={styles.removeBtn}
               onPress={() => removePhoto(item)}
             />
@@ -242,146 +249,147 @@ export function CaptureScreen({ route, navigation }: Props) {
 
       <View style={styles.bottomBar}>
         <Button
-          mode="contained"
+          size="lg"
           onPress={handleContinue}
           disabled={!isReady}
-          icon="arrow-right"
-          contentStyle={{ paddingVertical: spacing.sm, flexDirection: 'row-reverse' }}
+          iconRight={<Ionicons name="arrow-forward" size={18} color="#ffffff" />}
         >
           Continuar para revisão
         </Button>
       </View>
 
-      <Portal>
-        <Dialog
-          visible={showStudentPicker}
-          onDismiss={() => setShowStudentPicker(false)}
-          style={{ maxHeight: '80%' }}
-        >
-          <Dialog.Title>Selecionar aluno</Dialog.Title>
-          <Dialog.ScrollArea style={{ paddingHorizontal: 0 }}>
-            <ScrollView>
-              {students.length === 0 ? (
-                <View style={{ padding: spacing.lg }}>
-                  <Text style={{ color: colors.textMuted }}>
-                    Nenhum aluno cadastrado nas turmas desta prova.
+      <Dialog
+        open={showStudentPicker}
+        onOpenChange={(o) => !o && setShowStudentPicker(false)}
+      >
+        <DialogTitle>Selecionar aluno</DialogTitle>
+        <DialogScrollArea>
+          {students.length === 0 ? (
+            <View className="px-5 py-6">
+              <Text className="text-ink-muted text-center">
+                Nenhum aluno cadastrado nas turmas desta prova.
+              </Text>
+            </View>
+          ) : (
+            classes.map((c) => {
+              const list = studentsByClass.get(c.id) ?? [];
+              if (list.length === 0) return null;
+              return (
+                <View key={c.id}>
+                  <Text className="px-5 pt-3 pb-1 text-[11px] font-bold text-ink-muted uppercase tracking-wider">
+                    {c.name}
                   </Text>
-                </View>
-              ) : (
-                classes.map((c) => {
-                  const list = studentsByClass.get(c.id) ?? [];
-                  if (list.length === 0) return null;
-                  return (
-                    <View key={c.id}>
-                      <Text style={styles.dialogSection}>{c.name}</Text>
-                      {list.map((s) => (
-                        <Pressable
-                          key={s.id}
-                          onPress={() => {
-                            setSelectedId(s.id);
-                            setShowStudentPicker(false);
-                          }}
-                          style={({ pressed }) => [
-                            styles.dialogRow,
-                            pressed && { backgroundColor: colors.primaryLight },
-                          ]}
-                        >
-                          <View style={styles.smallAvatar}>
-                            <Text style={styles.smallAvatarText}>
-                              {s.name.charAt(0).toUpperCase()}
-                            </Text>
-                          </View>
-                          <Text style={styles.dialogRowText}>{s.name}</Text>
-                          {selectedId === s.id ? (
-                            <Text style={styles.checkmark}>✓</Text>
-                          ) : null}
-                        </Pressable>
-                      ))}
-                    </View>
-                  );
-                })
-              )}
-              <Pressable
-                onPress={() => {
-                  setShowStudentPicker(false);
-                  if (classes.length === 1) setNewStudentClassId(classes[0].id);
-                  setShowAddStudent(true);
-                }}
-                style={({ pressed }) => [
-                  styles.dialogRow,
-                  pressed && { backgroundColor: colors.primaryLight },
-                ]}
-              >
-                <Text style={[styles.dialogRowText, { color: colors.primary }]}>
-                  ＋ Adicionar aluno
-                </Text>
-              </Pressable>
-            </ScrollView>
-          </Dialog.ScrollArea>
-          <Dialog.Actions>
-            <Button onPress={() => setShowStudentPicker(false)}>Fechar</Button>
-          </Dialog.Actions>
-        </Dialog>
-
-        <Dialog
-          visible={showAddStudent}
-          onDismiss={() => setShowAddStudent(false)}
-        >
-          <Dialog.Title>Novo aluno</Dialog.Title>
-          <Dialog.Content>
-            {classes.length > 1 ? (
-              <>
-                <Text style={styles.fieldLabel}>Turma</Text>
-                <View style={styles.classChipsRow}>
-                  {classes.map((c) => (
+                  {list.map((s) => (
                     <Pressable
-                      key={c.id}
-                      onPress={() => setNewStudentClassId(c.id)}
-                      style={({ pressed }) => [
-                        styles.classChoiceChip,
-                        newStudentClassId === c.id && {
-                          backgroundColor: colors.primary,
-                        },
-                        pressed && { opacity: 0.7 },
-                      ]}
+                      key={s.id}
+                      onPress={() => {
+                        setSelectedId(s.id);
+                        setShowStudentPicker(false);
+                      }}
+                      className="flex-row items-center py-3 px-5 gap-3 active:bg-brand-50"
                     >
+                      <View className="w-9 h-9 rounded-full bg-brand-50 items-center justify-center">
+                        <Text className="text-brand-700 font-bold">
+                          {s.name.charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
                       <Text
-                        style={[
-                          styles.classChoiceText,
-                          newStudentClassId === c.id && { color: '#ffffff' },
-                        ]}
+                        className="flex-1 text-[15px] text-ink font-medium"
+                        numberOfLines={1}
                       >
-                        {c.name}
+                        {s.name}
                       </Text>
+                      {selectedId === s.id ? (
+                        <Text className="text-brand-500 text-[20px] font-extrabold">
+                          ✓
+                        </Text>
+                      ) : null}
                     </Pressable>
                   ))}
                 </View>
-              </>
-            ) : null}
-            <TextInput
-              label="Nome do aluno"
-              mode="outlined"
-              value={newStudentName}
-              onChangeText={setNewStudentName}
-              placeholder="Ex.: João Silva"
-              autoFocus
-              autoCapitalize="words"
-              outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
-              style={{ marginTop: classes.length > 1 ? spacing.sm : 0 }}
-            />
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setShowAddStudent(false)}>Cancelar</Button>
-            <Button
-              onPress={handleAddStudent}
-              disabled={!newStudentName.trim() || !newStudentClassId}
-            >
-              Adicionar
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+              );
+            })
+          )}
+          <Pressable
+            onPress={() => {
+              setShowStudentPicker(false);
+              if (classes.length === 1) setNewStudentClassId(classes[0].id);
+              setShowAddStudent(true);
+            }}
+            className="flex-row items-center py-3 px-5 gap-3 active:bg-brand-50 border-t border-line"
+          >
+            <View className="w-9 h-9 rounded-full bg-brand-50 items-center justify-center">
+              <Text className="text-brand-700 font-bold text-[18px]">＋</Text>
+            </View>
+            <Text className="flex-1 text-[15px] font-semibold text-brand-500">
+              Adicionar aluno
+            </Text>
+          </Pressable>
+        </DialogScrollArea>
+        <DialogActions>
+          <Button variant="ghost" onPress={() => setShowStudentPicker(false)}>
+            Fechar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={showAddStudent}
+        onOpenChange={(o) => !o && setShowAddStudent(false)}
+      >
+        <DialogTitle>Novo aluno</DialogTitle>
+        <DialogContent>
+          {classes.length > 1 ? (
+            <>
+              <Text style={styles.fieldLabel}>Turma</Text>
+              <View style={styles.classChipsRow}>
+                {classes.map((c) => (
+                  <Pressable
+                    key={c.id}
+                    onPress={() => setNewStudentClassId(c.id)}
+                    style={({ pressed }) => [
+                      styles.classChoiceChip,
+                      newStudentClassId === c.id && {
+                        backgroundColor: colors.primary,
+                      },
+                      pressed && { opacity: 0.7 },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.classChoiceText,
+                        newStudentClassId === c.id && { color: '#ffffff' },
+                      ]}
+                    >
+                      {c.name}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </>
+          ) : null}
+          <Input
+            label="Nome do aluno"
+            value={newStudentName}
+            onChangeText={setNewStudentName}
+            placeholder="Ex.: João Silva"
+            autoFocus
+            autoCapitalize="words"
+            containerClasses={classes.length > 1 ? 'mt-2' : ''}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button variant="ghost" onPress={() => setShowAddStudent(false)}>
+            Cancelar
+          </Button>
+          <Button
+            onPress={handleAddStudent}
+            disabled={!newStudentName.trim() || !newStudentClassId}
+          >
+            Adicionar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </KeyboardAvoidingView>
   );
 }

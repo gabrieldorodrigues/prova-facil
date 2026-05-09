@@ -39,7 +39,7 @@ export type RootStackParamList = {
 
 export type TabParamList = {
   Home: undefined;
-  TurmasTab: undefined;
+  TurmasTab: { openCreate?: boolean } | undefined;
   ProvasTab: undefined;
 };
 

@@ -1,32 +1,37 @@
-import { MD3LightTheme } from 'react-native-paper';
-
 export const colors = {
-  primary: '#4f46e5',
-  primaryDark: '#4338ca',
-  primaryLight: '#eef2ff',
-  primarySurface: '#e0e7ff',
+  primary: '#2C5F9E',
+  primaryDark: '#234D7E',
+  primaryLight: '#EAF1F8',
+  primarySurface: '#D5E3F2',
 
-  accent: '#10b981',
-  accentLight: '#d1fae5',
+  secondary: '#7E8BA3',
 
-  warning: '#f59e0b',
-  warningLight: '#fef3c7',
+  accent: '#FFC107',
+  accentDark: '#FFA000',
+  accentLight: '#FFF8E1',
 
-  danger: '#ef4444',
-  dangerLight: '#fee2e2',
+  success: '#16A34A',
+  successLight: '#DCFCE7',
 
-  bg: '#f8fafc',
-  surface: '#ffffff',
-  surfaceMuted: '#f1f5f9',
-  border: '#e2e8f0',
+  warning: '#F59E0B',
+  warningLight: '#FEF3C7',
 
-  textPrimary: '#0f172a',
-  textSecondary: '#475569',
-  textMuted: '#94a3b8',
+  danger: '#EF4444',
+  dangerLight: '#FEE2E2',
 
-  scoreGood: '#16a34a',
-  scoreMid: '#d97706',
-  scoreBad: '#dc2626',
+  bg: '#F5F5F0',
+  surface: '#FFFFFF',
+  surfaceMuted: '#EDECE5',
+  border: '#DDDCD4',
+
+  textPrimary: '#333333',
+  textSecondary: '#7E8BA3',
+  textMuted: '#7E8BA3',
+  textSubtle: '#A0AEC0',
+
+  scoreGood: '#16A34A',
+  scoreMid: '#D97706',
+  scoreBad: '#DC2626',
 };
 
 export const spacing = {
@@ -60,30 +65,6 @@ export const elevation = {
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 4,
-  },
-};
-
-export const paperTheme = {
-  ...MD3LightTheme,
-  roundness: 12,
-  colors: {
-    ...MD3LightTheme.colors,
-    primary: colors.primary,
-    onPrimary: '#ffffff',
-    primaryContainer: colors.primarySurface,
-    onPrimaryContainer: colors.primaryDark,
-    secondary: colors.accent,
-    onSecondary: '#ffffff',
-    secondaryContainer: colors.accentLight,
-    surface: colors.surface,
-    surfaceVariant: colors.surfaceMuted,
-    background: colors.bg,
-    error: colors.danger,
-    errorContainer: colors.dangerLight,
-    outline: colors.border,
-    outlineVariant: colors.border,
-    onSurface: colors.textPrimary,
-    onSurfaceVariant: colors.textSecondary,
   },
 };
 

@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
@@ -8,19 +9,21 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  Text,
   View,
 } from 'react-native';
-import {
-  Button,
-  Dialog,
-  Portal,
-  Snackbar,
-  Text,
-  TextInput,
-} from 'react-native-paper';
 import { ClassMultiSelectDialog } from '../components/ClassMultiSelectDialog';
 import { QuestionRow } from '../components/QuestionRow';
 import { SectionHeader } from '../components/SectionHeader';
+import { Button } from '../components/ui/Button';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from '../components/ui/Dialog';
+import { Input } from '../components/ui/Input';
+import { useToast } from '../components/ui/Toast';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { classStorage, examStorage } from '../services/storage';
 import { Class, Exam, Question } from '../types';
@@ -47,7 +50,7 @@ export function CreateExamScreen({ route, navigation }: Props) {
   );
   const [classes, setClasses] = useState<Class[]>([]);
   const [questions, setQuestions] = useState<Question[]>([makeQuestion(1)]);
-  const [snack, setSnack] = useState<string | null>(null);
+  const { toast } = useToast();
   const [showClassPicker, setShowClassPicker] = useState(false);
   const [showCreateClass, setShowCreateClass] = useState(false);
   const [newClassName, setNewClassName] = useState('');
@@ -79,7 +82,7 @@ export function CreateExamScreen({ route, navigation }: Props) {
 
   const removeQuestion = (idx: number) => {
     if (questions.length === 1) {
-      setSnack('A prova precisa de pelo menos uma questão.');
+      toast('A prova precisa de pelo menos uma questão.', 'info', 2200);
       return;
     }
     setQuestions((prev) =>
@@ -93,7 +96,7 @@ export function CreateExamScreen({ route, navigation }: Props) {
   const distributeEvenly = () => {
     const per = Math.round((10 / questions.length) * 100) / 100;
     setQuestions((prev) => prev.map((q) => ({ ...q, weight: per })));
-    setSnack(`Pesos distribuídos: ${per} por questão.`);
+    toast(`Pesos distribuídos: ${per} por questão.`, 'success', 2200);
   };
 
   const toggleClass = (id: string) =>
@@ -153,15 +156,12 @@ export function CreateExamScreen({ route, navigation }: Props) {
           <Text className="text-[12px] font-bold text-ink-muted uppercase tracking-wider mb-3">
             1. Informações da prova
           </Text>
-          <TextInput
+          <Input
             label="Nome da prova"
-            mode="outlined"
             value={name}
             onChangeText={setName}
             placeholder="Ex.: Matemática 1º Bimestre"
-            outlineColor={colors.border}
-            activeOutlineColor={colors.primary}
-            style={{ backgroundColor: '#ffffff', marginBottom: 12 }}
+            containerClasses="mb-3"
           />
 
           <View className="flex-row justify-between items-baseline mb-2">
@@ -238,11 +238,10 @@ export function CreateExamScreen({ route, navigation }: Props) {
             </Text>
           </View>
           <Button
-            mode="text"
-            compact
+            variant="ghost"
+            size="sm"
             onPress={distributeEvenly}
-            textColor={colors.primary}
-            icon="scale-balance"
+            iconLeft={<Ionicons name="scale-outline" size={16} color={colors.primary} />}
           >
             Distribuir = 10
           </Button>
@@ -258,30 +257,24 @@ export function CreateExamScreen({ route, navigation }: Props) {
         ))}
 
         <Button
-          mode="outlined"
-          icon="plus"
+          variant="secondary"
+          iconLeft={<Ionicons name="add" size={18} color={colors.primary} />}
           onPress={addQuestion}
-          textColor={colors.primary}
           style={{ marginTop: 8 }}
         >
           Adicionar questão
         </Button>
 
         <Button
-          mode="contained"
+          size="lg"
           onPress={handleSave}
           disabled={!isValid}
-          icon="content-save"
+          iconLeft={<Ionicons name="save-outline" size={18} color="#ffffff" />}
           style={{ marginTop: 24 }}
-          contentStyle={{ paddingVertical: 8 }}
         >
           Salvar prova
         </Button>
       </ScrollView>
-
-      <Snackbar visible={!!snack} onDismiss={() => setSnack(null)} duration={2200}>
-        {snack ?? ''}
-      </Snackbar>
 
       <ClassMultiSelectDialog
         visible={showClassPicker}
@@ -295,32 +288,29 @@ export function CreateExamScreen({ route, navigation }: Props) {
         }}
       />
 
-      <Portal>
-        <Dialog
-          visible={showCreateClass}
-          onDismiss={() => setShowCreateClass(false)}
-        >
-          <Dialog.Title>Nova turma</Dialog.Title>
-          <Dialog.Content>
-            <TextInput
-              label="Nome da turma"
-              mode="outlined"
-              value={newClassName}
-              onChangeText={setNewClassName}
-              placeholder="Ex.: 9º A"
-              autoFocus
-              outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
-            />
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setShowCreateClass(false)}>Cancelar</Button>
-            <Button onPress={handleCreateClass} disabled={!newClassName.trim()}>
-              Criar
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+      <Dialog
+        open={showCreateClass}
+        onOpenChange={(o) => !o && setShowCreateClass(false)}
+      >
+        <DialogTitle>Nova turma</DialogTitle>
+        <DialogContent>
+          <Input
+            label="Nome da turma"
+            value={newClassName}
+            onChangeText={setNewClassName}
+            placeholder="Ex.: 9º A"
+            autoFocus
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button variant="ghost" onPress={() => setShowCreateClass(false)}>
+            Cancelar
+          </Button>
+          <Button onPress={handleCreateClass} disabled={!newClassName.trim()}>
+            Criar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </KeyboardAvoidingView>
   );
 }

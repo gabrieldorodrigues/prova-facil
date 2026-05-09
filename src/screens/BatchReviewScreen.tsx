@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { CommonActions } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
@@ -8,17 +9,19 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
-import {
-  ActivityIndicator,
-  Button,
-  Dialog,
-  IconButton,
-  Portal,
-  Text,
-} from 'react-native-paper';
 import { ScoreBadge } from '../components/ScoreBadge';
+import { Button } from '../components/ui/Button';
+import {
+  Dialog,
+  DialogActions,
+  DialogScrollArea,
+  DialogTitle,
+} from '../components/ui/Dialog';
+import { IconButton } from '../components/ui/IconButton';
+import { Spinner } from '../components/ui/Spinner';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { detectBatch } from '../services/geminiVision';
 import {
@@ -187,7 +190,7 @@ export function BatchReviewScreen({ route, navigation }: Props) {
       navigation.dispatch(
         CommonActions.reset({
           index: 1,
-          routes: [{ name: 'Home' }, { name: 'ExamDetail', params: { examId } }],
+          routes: [{ name: 'MainTabs' }, { name: 'ExamDetail', params: { examId } }],
         }),
       );
     } catch (err) {
@@ -199,7 +202,7 @@ export function BatchReviewScreen({ route, navigation }: Props) {
   if (loading || !exam) {
     return (
       <View style={styles.loadingScreen}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <Spinner size="large" color={colors.primary} />
         <Text style={styles.loadingTitle}>Analisando provas com IA</Text>
         <Text style={styles.loadingHint}>
           {progress.done} de {progress.total} processadas...
@@ -294,29 +297,6 @@ export function BatchReviewScreen({ route, navigation }: Props) {
                       )}
                     </>
                   )}
-
-                  <View style={styles.entryActions}>
-                    <Pressable
-                      onPress={() => pickStudent(entry.id)}
-                      style={({ pressed }) => [
-                        styles.actionPill,
-                        pressed && { opacity: 0.7 },
-                      ]}
-                    >
-                      <Text style={styles.actionPillText}>
-                        {matchedStudent ? 'Trocar aluno' : 'Selecionar aluno'}
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => editAnswers(entry.id)}
-                      style={({ pressed }) => [
-                        styles.actionPill,
-                        pressed && { opacity: 0.7 },
-                      ]}
-                    >
-                      <Text style={styles.actionPillText}>Editar respostas</Text>
-                    </Pressable>
-                  </View>
                 </View>
 
                 <View style={{ alignItems: 'flex-end', gap: 6 }}>
@@ -324,11 +304,44 @@ export function BatchReviewScreen({ route, navigation }: Props) {
                   <IconButton
                     icon="close"
                     size={16}
-                    iconColor={colors.textMuted}
+                    color={colors.textMuted}
+                    accessibilityLabel="Remover correção"
                     onPress={() => removeEntry(entry.id)}
-                    style={{ margin: 0 }}
                   />
                 </View>
+              </View>
+
+              <View style={styles.entryFooter}>
+                <Button
+                  variant={matchedStudent ? 'ghost' : 'tonal'}
+                  size="sm"
+                  style={{ flex: 1 }}
+                  iconLeft={
+                    <Ionicons
+                      name={matchedStudent ? 'swap-horizontal' : 'person-add-outline'}
+                      size={16}
+                      color={matchedStudent ? colors.primary : colors.primaryDark}
+                    />
+                  }
+                  onPress={() => pickStudent(entry.id)}
+                >
+                  {matchedStudent ? 'Trocar aluno' : 'Selecionar aluno'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  style={{ flex: 1 }}
+                  iconLeft={
+                    <Ionicons
+                      name="create-outline"
+                      size={16}
+                      color={colors.primary}
+                    />
+                  }
+                  onPress={() => editAnswers(entry.id)}
+                >
+                  Editar respostas
+                </Button>
               </View>
             </View>
           );
@@ -337,19 +350,18 @@ export function BatchReviewScreen({ route, navigation }: Props) {
 
       <View style={styles.bottomBar}>
         <Button
-          mode="outlined"
+          variant="secondary"
           onPress={() => navigation.goBack()}
-          style={{ flex: 1, borderColor: colors.border }}
-          textColor={colors.textSecondary}
+          style={{ flex: 1 }}
+          className="border-line"
+          labelClasses="text-ink-muted"
         >
           Voltar
         </Button>
         <View style={{ width: spacing.sm }} />
         <Button
-          mode="contained"
-          icon="check-all"
+          iconLeft={<Ionicons name="checkmark-done" size={18} color="#ffffff" />}
           style={{ flex: 2 }}
-          contentStyle={{ paddingVertical: 4 }}
           onPress={handleSaveAll}
           loading={saving}
           disabled={saving || entries.length === 0}
@@ -358,58 +370,56 @@ export function BatchReviewScreen({ route, navigation }: Props) {
         </Button>
       </View>
 
-      <Portal>
-        <Dialog
-          visible={!!pickingFor}
-          onDismiss={() => setPickingFor(null)}
-          style={{ maxHeight: '80%' }}
-        >
-          <Dialog.Title>
-            {cls ? `Selecionar aluno • ${cls.name}` : 'Selecionar aluno'}
-          </Dialog.Title>
-          <Dialog.ScrollArea style={{ paddingHorizontal: 0 }}>
-            <ScrollView>
-              {students.length === 0 ? (
-                <View style={{ padding: spacing.lg }}>
-                  <Text style={{ color: colors.textMuted }}>
-                    Nenhum aluno cadastrado nesta turma. Volte e adicione alunos
-                    primeiro.
+      <Dialog open={!!pickingFor} onOpenChange={(o) => !o && setPickingFor(null)}>
+        <DialogTitle>
+          {cls ? `Selecionar aluno • ${cls.name}` : 'Selecionar aluno'}
+        </DialogTitle>
+        <DialogScrollArea>
+          {students.length === 0 ? (
+            <View className="px-5 py-6">
+              <Text className="text-ink-muted text-center">
+                Nenhum aluno cadastrado nesta turma. Volte e adicione alunos
+                primeiro.
+              </Text>
+            </View>
+          ) : (
+            students.map((s) => {
+              const usedBy = entries.find(
+                (e) => e.studentId === s.id && e.id !== pickingFor,
+              );
+              return (
+                <Pressable
+                  key={s.id}
+                  onPress={() => confirmStudent(s.id)}
+                  className="flex-row items-center py-3 px-5 gap-3 active:bg-brand-50"
+                >
+                  <View className="w-9 h-9 rounded-full bg-brand-50 items-center justify-center">
+                    <Text className="text-brand-700 font-bold">
+                      {s.name.charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                  <Text
+                    className="flex-1 text-[15px] text-ink font-medium"
+                    numberOfLines={1}
+                  >
+                    {s.name}
                   </Text>
-                </View>
-              ) : (
-                students.map((s) => {
-                  const usedBy = entries.find(
-                    (e) => e.studentId === s.id && e.id !== pickingFor,
-                  );
-                  return (
-                    <Pressable
-                      key={s.id}
-                      onPress={() => confirmStudent(s.id)}
-                      style={({ pressed }) => [
-                        styles.studentPickRow,
-                        pressed && { backgroundColor: colors.primaryLight },
-                      ]}
-                    >
-                      <View style={styles.smallAvatar}>
-                        <Text style={styles.smallAvatarText}>
-                          {s.name.charAt(0).toUpperCase()}
-                        </Text>
-                      </View>
-                      <Text style={styles.studentPickName}>{s.name}</Text>
-                      {usedBy ? (
-                        <Text style={styles.usedTag}>já em uso</Text>
-                      ) : null}
-                    </Pressable>
-                  );
-                })
-              )}
-            </ScrollView>
-          </Dialog.ScrollArea>
-          <Dialog.Actions>
-            <Button onPress={() => setPickingFor(null)}>Cancelar</Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+                  {usedBy ? (
+                    <Text className="text-[10px] text-ink-muted bg-bg-muted px-1.5 py-0.5 rounded">
+                      já em uso
+                    </Text>
+                  ) : null}
+                </Pressable>
+              );
+            })
+          )}
+        </DialogScrollArea>
+        <DialogActions>
+          <Button variant="ghost" onPress={() => setPickingFor(null)}>
+            Cancelar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </View>
   );
 }
@@ -455,16 +465,17 @@ const styles = StyleSheet.create({
   entryCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
-    padding: spacing.md,
+    paddingTop: spacing.md,
     marginTop: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    overflow: 'hidden',
   },
   entryCardWarning: {
     borderColor: colors.warning,
     backgroundColor: '#fffbeb',
   },
-  entryRow: { flexDirection: 'row', gap: spacing.md },
+  entryRow: { flexDirection: 'row', gap: spacing.md, paddingHorizontal: spacing.md, paddingBottom: spacing.md },
   entryPhoto: {
     width: 64,
     height: 80,
@@ -487,19 +498,15 @@ const styles = StyleSheet.create({
   },
   errorChipText: { color: colors.danger, fontSize: 11, fontWeight: '600' },
 
-  entryActions: {
+  entryFooter: {
     flexDirection: 'row',
-    gap: spacing.xs,
-    marginTop: 4,
-    flexWrap: 'wrap',
-  },
-  actionPill: {
-    backgroundColor: colors.primaryLight,
+    gap: spacing.sm,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.sm,
+    paddingVertical: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.surfaceMuted,
   },
-  actionPillText: { color: colors.primaryDark, fontSize: 11, fontWeight: '700' },
 
   bottomBar: {
     position: 'absolute',
