@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
+import { colors, radius } from '../theme';
 
 type Variant = 'default' | 'selected' | 'correct' | 'wrong' | 'unknown';
 
@@ -11,16 +12,16 @@ interface Props {
   size?: number;
 }
 
-const COLORS: Record<Variant, { bg: string; fg: string; border: string }> = {
-  default: { bg: '#fff', fg: '#374151', border: '#d1d5db' },
-  selected: { bg: '#2563eb', fg: '#fff', border: '#1d4ed8' },
-  correct: { bg: '#16a34a', fg: '#fff', border: '#15803d' },
-  wrong: { bg: '#dc2626', fg: '#fff', border: '#b91c1c' },
-  unknown: { bg: '#f3f4f6', fg: '#6b7280', border: '#d1d5db' },
+const STYLES: Record<Variant, { bg: string; fg: string; border: string }> = {
+  default: { bg: colors.surface, fg: colors.textSecondary, border: colors.border },
+  selected: { bg: colors.primary, fg: '#ffffff', border: colors.primaryDark },
+  correct: { bg: colors.accent, fg: '#ffffff', border: '#059669' },
+  wrong: { bg: colors.danger, fg: '#ffffff', border: '#dc2626' },
+  unknown: { bg: colors.surfaceMuted, fg: colors.textMuted, border: colors.border },
 };
 
-export function AnswerCell({ label, variant = 'default', onPress, size = 40 }: Props) {
-  const c = COLORS[variant];
+export function AnswerCell({ label, variant = 'default', onPress, size = 44 }: Props) {
+  const c = STYLES[variant];
   const content = (
     <View
       style={[
@@ -28,19 +29,24 @@ export function AnswerCell({ label, variant = 'default', onPress, size = 40 }: P
         { width: size, height: size, backgroundColor: c.bg, borderColor: c.border },
       ]}
     >
-      <Text style={{ color: c.fg, fontWeight: '600' }}>{label}</Text>
+      <Text style={{ color: c.fg, fontWeight: '700', fontSize: 15 }}>{label}</Text>
     </View>
   );
   if (!onPress) return content;
-  return <Pressable onPress={onPress}>{content}</Pressable>;
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+      {content}
+    </Pressable>
+  );
 }
 
 const styles = StyleSheet.create({
   cell: {
-    borderRadius: 8,
-    borderWidth: 1,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 6,
+    marginRight: 8,
+    marginBottom: 8,
   },
 });

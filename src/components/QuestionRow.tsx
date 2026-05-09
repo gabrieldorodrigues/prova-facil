@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { IconButton, SegmentedButtons, Text, TextInput } from 'react-native-paper';
 import { Question, QUESTION_TYPE_LABEL, QuestionType } from '../types';
 import { getOptionsForType } from '../utils/grading';
+import { colors, elevation, radius, spacing } from '../theme';
 import { AnswerCell } from './AnswerCell';
 
 interface Props {
@@ -34,12 +35,22 @@ export function QuestionRow({ question, onChange, onRemove }: Props) {
   };
 
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, elevation.sm]}>
       <View style={styles.headerRow}>
-        <Text variant="titleMedium">Questão {question.number}</Text>
-        <IconButton icon="delete-outline" size={20} onPress={onRemove} />
+        <View style={styles.numberBadge}>
+          <Text style={styles.numberText}>{question.number}</Text>
+        </View>
+        <Text style={styles.title}>Questão {question.number}</Text>
+        <View style={{ flex: 1 }} />
+        <IconButton
+          icon="delete-outline"
+          size={20}
+          iconColor={colors.danger}
+          onPress={onRemove}
+        />
       </View>
 
+      <Text style={styles.fieldLabel}>Tipo de questão</Text>
       <SegmentedButtons
         value={question.type}
         onValueChange={handleTypeChange}
@@ -49,12 +60,10 @@ export function QuestionRow({ question, onChange, onRemove }: Props) {
           { value: 'mc4', label: QUESTION_TYPE_LABEL.mc4 },
           { value: 'tf', label: QUESTION_TYPE_LABEL.tf },
         ]}
-        style={{ marginBottom: 12 }}
+        style={{ marginBottom: spacing.md }}
       />
 
-      <Text variant="labelMedium" style={styles.label}>
-        Resposta correta
-      </Text>
+      <Text style={styles.fieldLabel}>Resposta correta</Text>
       <View style={styles.cells}>
         {options.map((opt) => (
           <AnswerCell
@@ -73,7 +82,8 @@ export function QuestionRow({ question, onChange, onRemove }: Props) {
         keyboardType="decimal-pad"
         value={String(question.weight)}
         onChangeText={handleWeight}
-        style={{ marginTop: 12 }}
+        style={{ marginTop: spacing.sm }}
+        outlineColor={colors.border}
       />
     </View>
   );
@@ -81,17 +91,32 @@ export function QuestionRow({ question, onChange, onRemove }: Props) {
 
 const styles = StyleSheet.create({
   row: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
+  numberBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: radius.full,
+    backgroundColor: colors.primaryLight,
     alignItems: 'center',
-    marginBottom: 8,
+    justifyContent: 'center',
+    marginRight: spacing.sm,
   },
-  label: { marginBottom: 6, color: '#4b5563' },
+  numberText: { color: colors.primaryDark, fontWeight: '700', fontSize: 13 },
+  title: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
+  fieldLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+    fontWeight: '600',
+    marginBottom: spacing.sm,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   cells: { flexDirection: 'row', flexWrap: 'wrap' },
 });

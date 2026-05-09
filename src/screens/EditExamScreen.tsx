@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -10,14 +10,7 @@ import {
   ScrollView,
   View,
 } from 'react-native';
-import {
-  Button,
-  Dialog,
-  Portal,
-  Snackbar,
-  Text,
-  TextInput,
-} from 'react-native-paper';
+import { Button, Snackbar, Text, TextInput } from 'react-native-paper';
 import { ClassMultiSelectDialog } from '../components/ClassMultiSelectDialog';
 import { QuestionRow } from '../components/QuestionRow';
 import { SectionHeader } from '../components/SectionHeader';
@@ -26,7 +19,7 @@ import { classStorage, examStorage } from '../services/storage';
 import { Class, Exam, Question } from '../types';
 import { colors } from '../theme';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'CreateExam'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'EditExam'>;
 
 function makeQuestion(number: number): Question {
   return {
@@ -38,25 +31,34 @@ function makeQuestion(number: number): Question {
   };
 }
 
-export function CreateExamScreen({ route, navigation }: Props) {
-  const initialClassId = route.params?.classId;
+export function EditExamScreen({ route, navigation }: Props) {
+  const { examId } = route.params;
 
   const [name, setName] = useState('');
-  const [classIds, setClassIds] = useState<string[]>(
-    initialClassId ? [initialClassId] : [],
-  );
+  const [classIds, setClassIds] = useState<string[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
-  const [questions, setQuestions] = useState<Question[]>([makeQuestion(1)]);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [original, setOriginal] = useState<Exam | null>(null);
   const [snack, setSnack] = useState<string | null>(null);
   const [showClassPicker, setShowClassPicker] = useState(false);
-  const [showCreateClass, setShowCreateClass] = useState(false);
-  const [newClassName, setNewClassName] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      const e = await examStorage.get(examId);
+      if (!e) {
+        navigation.goBack();
+        return;
+      }
+      setOriginal(e);
+      setName(e.name);
+      setClassIds(e.classIds);
+      setQuestions(e.questions);
+    })();
+  }, [examId, navigation]);
 
   const loadClasses = useCallback(async () => {
-    const all = await classStorage.list();
-    setClasses(all);
-    if (classIds.length === 0 && all.length === 1) setClassIds([all[0].id]);
-  }, [classIds.length]);
+    setClasses(await classStorage.list());
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -103,22 +105,8 @@ export function CreateExamScreen({ route, navigation }: Props) {
   const removeClassChip = (id: string) =>
     setClassIds((prev) => prev.filter((x) => x !== id));
 
-  const handleCreateClass = async () => {
-    const trimmed = newClassName.trim();
-    if (!trimmed) return;
-    const cls: Class = {
-      id: Crypto.randomUUID(),
-      name: trimmed,
-      createdAt: new Date().toISOString(),
-    };
-    await classStorage.save(cls);
-    setClasses((prev) => [...prev, cls].sort((a, b) => a.name.localeCompare(b.name)));
-    setClassIds((prev) => [...prev, cls.id]);
-    setNewClassName('');
-    setShowCreateClass(false);
-  };
-
   const handleSave = async () => {
+    if (!original) return;
     if (!name.trim()) return Alert.alert('Atenção', 'Informe o nome da prova.');
     if (classIds.length === 0)
       return Alert.alert('Atenção', 'Selecione pelo menos uma turma.');
@@ -127,16 +115,17 @@ export function CreateExamScreen({ route, navigation }: Props) {
     if (totalWeight <= 0)
       return Alert.alert('Atenção', 'O peso total deve ser maior que zero.');
 
-    const exam: Exam = {
-      id: Crypto.randomUUID(),
+    const updated: Exam = {
+      ...original,
       name: name.trim(),
       classIds,
-      createdAt: new Date().toISOString(),
       questions,
     };
-    await examStorage.save(exam);
+    await examStorage.save(updated);
     navigation.goBack();
   };
+
+  if (!original) return null;
 
   const isValid = name.trim() && classIds.length > 0 && totalWeight > 0;
 
@@ -151,14 +140,13 @@ export function CreateExamScreen({ route, navigation }: Props) {
       >
         <View className="bg-bg-surface rounded-2xl p-4">
           <Text className="text-[12px] font-bold text-ink-muted uppercase tracking-wider mb-3">
-            1. Informações da prova
+            Informações da prova
           </Text>
           <TextInput
             label="Nome da prova"
             mode="outlined"
             value={name}
             onChangeText={setName}
-            placeholder="Ex.: Matemática 1º Bimestre"
             outlineColor={colors.border}
             activeOutlineColor={colors.primary}
             style={{ backgroundColor: '#ffffff', marginBottom: 12 }}
@@ -168,9 +156,7 @@ export function CreateExamScreen({ route, navigation }: Props) {
             <Text className="text-[12px] font-bold text-ink-muted uppercase tracking-wider">
               Turmas
             </Text>
-            <Text className="text-[11px] text-ink-subtle">
-              Selecione uma ou mais
-            </Text>
+            <Text className="text-[11px] text-ink-subtle">Edite quando necessário</Text>
           </View>
 
           {selectedClasses.length === 0 ? (
@@ -189,9 +175,7 @@ export function CreateExamScreen({ route, navigation }: Props) {
                   key={c.id}
                   className="flex-row items-center bg-brand-50 pl-2 pr-1 py-1 rounded-full"
                 >
-                  <Text className="text-brand-700 font-bold text-[13px]">
-                    {c.name}
-                  </Text>
+                  <Text className="text-brand-700 font-bold text-[13px]">{c.name}</Text>
                   <Pressable
                     onPress={() => removeClassChip(c.id)}
                     hitSlop={8}
@@ -216,7 +200,7 @@ export function CreateExamScreen({ route, navigation }: Props) {
         </View>
 
         <SectionHeader
-          title="2. Questões e gabarito"
+          title="Gabarito"
           hint={`${questions.length} questão(ões) • peso total ${totalWeight}`}
         />
 
@@ -275,7 +259,7 @@ export function CreateExamScreen({ route, navigation }: Props) {
           style={{ marginTop: 24 }}
           contentStyle={{ paddingVertical: 8 }}
         >
-          Salvar prova
+          Salvar alterações
         </Button>
       </ScrollView>
 
@@ -289,38 +273,7 @@ export function CreateExamScreen({ route, navigation }: Props) {
         classes={classes}
         selectedIds={classIds}
         onToggle={toggleClass}
-        onCreateNew={() => {
-          setShowClassPicker(false);
-          setShowCreateClass(true);
-        }}
       />
-
-      <Portal>
-        <Dialog
-          visible={showCreateClass}
-          onDismiss={() => setShowCreateClass(false)}
-        >
-          <Dialog.Title>Nova turma</Dialog.Title>
-          <Dialog.Content>
-            <TextInput
-              label="Nome da turma"
-              mode="outlined"
-              value={newClassName}
-              onChangeText={setNewClassName}
-              placeholder="Ex.: 9º A"
-              autoFocus
-              outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
-            />
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setShowCreateClass(false)}>Cancelar</Button>
-            <Button onPress={handleCreateClass} disabled={!newClassName.trim()}>
-              Criar
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
     </KeyboardAvoidingView>
   );
 }

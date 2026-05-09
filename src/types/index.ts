@@ -8,10 +8,23 @@ export interface Question {
   weight: number;
 }
 
+export interface Class {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+export interface Student {
+  id: string;
+  classId: string;
+  name: string;
+  createdAt: string;
+}
+
 export interface Exam {
   id: string;
   name: string;
-  className: string;
+  classIds: string[];
   createdAt: string;
   questions: Question[];
 }
@@ -19,13 +32,15 @@ export interface Exam {
 export interface Correction {
   id: string;
   examId: string;
-  studentName: string;
+  studentId: string | null;
+  studentNameRaw: string | null;
   photoUris: string[];
   detectedAnswers: Record<string, string>;
   score: number;
   hits: number;
   misses: number;
   correctedAt: string;
+  identified: boolean;
 }
 
 export const QUESTION_TYPE_LABEL: Record<QuestionType, string> = {

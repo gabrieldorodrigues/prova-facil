@@ -1,18 +1,19 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Card, Text } from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
 import { AnswerCell } from '../components/AnswerCell';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { detectAnswers, GeminiKeyMissingError } from '../services/geminiVision';
 import { examStorage } from '../services/storage';
 import { Exam, QUESTION_TYPE_LABEL } from '../types';
+import { colors, elevation, radius, spacing } from '../theme';
 import { getOptionsForType } from '../utils/grading';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Review'>;
 
 export function ReviewScreen({ route, navigation }: Props) {
-  const { examId, studentName, photoUris } = route.params;
+  const { examId, studentName, photoUris, studentId } = route.params;
   const [exam, setExam] = useState<Exam | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -35,10 +36,10 @@ export function ReviewScreen({ route, navigation }: Props) {
         if (cancelled) return;
         if (err instanceof GeminiKeyMissingError) {
           setError(
-            'Chave de API do Gemini não configurada. Crie um .env na raiz do projeto com EXPO_PUBLIC_GEMINI_API_KEY=... (obtenha em https://aistudio.google.com/apikey) e reinicie o expo. Você pode preencher as respostas manualmente abaixo.',
+            'Chave da API do Gemini não configurada. Crie um .env com EXPO_PUBLIC_GEMINI_API_KEY=... (obtenha em aistudio.google.com/apikey). Você pode preencher manualmente abaixo.',
           );
         } else {
-          setError(`Falha ao chamar Gemini: ${String(err)}. Preencha manualmente.`);
+          setError(`Falha ao chamar a IA: ${String(err)}. Preencha manualmente abaixo.`);
         }
         const fallback: Record<string, string> = {};
         for (const q of e.questions) fallback[q.id] = '?';
@@ -52,56 +53,78 @@ export function ReviewScreen({ route, navigation }: Props) {
     };
   }, [examId, photoUris, navigation]);
 
-  const cycleAnswer = (questionId: string, options: string[]) => {
-    setAnswers((prev) => {
-      const current = prev[questionId] || '?';
-      const allOpts = [...options, '?'];
-      const idx = allOpts.indexOf(current);
-      const next = allOpts[(idx + 1) % allOpts.length];
-      return { ...prev, [questionId]: next };
-    });
-  };
+  const stats = useMemo(() => {
+    if (!exam) return { detected: 0, total: 0 };
+    const total = exam.questions.length;
+    const detected = exam.questions.filter((q) => {
+      const a = answers[q.id];
+      return a && a !== '?';
+    }).length;
+    return { detected, total };
+  }, [exam, answers]);
 
   if (loading || !exam) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#2563eb" />
-        <Text style={{ marginTop: 16, color: '#6b7280' }}>
-          Analisando fotos com Gemini...
-        </Text>
+        <View style={styles.loadingBox}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingTitle}>Analisando com IA</Text>
+          <Text style={styles.loadingHint}>
+            Lendo as marcações nas {photoUris.length} foto(s)...
+          </Text>
+        </View>
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-      >
-        <Text style={styles.subtitle}>
-          Aluno: <Text style={{ fontWeight: '700' }}>{studentName}</Text>
-        </Text>
-        <Text style={[styles.subtitle, { marginBottom: 12 }]}>
-          Toque em uma alternativa para alternar a resposta detectada.
-        </Text>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 120 }}>
+        <View style={[styles.headerCard, elevation.sm]}>
+          <Text style={styles.studentLabel}>Corrigindo prova de</Text>
+          <Text style={styles.studentName}>{studentName}</Text>
+          <View style={styles.progressRow}>
+            <View style={styles.progressBar}>
+              <View
+                style={[
+                  styles.progressFill,
+                  { width: `${(stats.detected / stats.total) * 100}%` },
+                ]}
+              />
+            </View>
+            <Text style={styles.progressText}>
+              {stats.detected}/{stats.total}
+            </Text>
+          </View>
+          <Text style={styles.headerHint}>
+            Toque em uma alternativa para alterar a resposta detectada.
+          </Text>
+        </View>
 
-        {error && (
-          <Card style={styles.errorCard}>
-            <Card.Content>
-              <Text style={{ color: '#991b1b' }}>{error}</Text>
-            </Card.Content>
-          </Card>
-        )}
+        {error ? (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorIcon}>⚠️</Text>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        ) : null}
 
         {exam.questions.map((q) => {
           const options = getOptionsForType(q.type);
           const detected = answers[q.id] || '?';
+          const isUnknown = detected === '?';
           return (
-            <Card key={q.id} style={styles.qCard}>
+            <View key={q.id} style={[styles.qCard, elevation.sm]}>
               <View style={styles.qHeader}>
-                <Text style={styles.qNumber}>Questão {q.number}</Text>
+                <View style={styles.qNumberBadge}>
+                  <Text style={styles.qNumberText}>{q.number}</Text>
+                </View>
                 <Text style={styles.qType}>{QUESTION_TYPE_LABEL[q.type]}</Text>
+                <View style={{ flex: 1 }} />
+                {isUnknown ? (
+                  <View style={styles.unknownChip}>
+                    <Text style={styles.unknownChipText}>verificar</Text>
+                  </View>
+                ) : null}
               </View>
               <View style={styles.cells}>
                 {options.map((opt) => (
@@ -120,7 +143,7 @@ export function ReviewScreen({ route, navigation }: Props) {
                   onPress={() => setAnswers((p) => ({ ...p, [q.id]: '?' }))}
                 />
               </View>
-            </Card>
+            </View>
           );
         })}
       </ScrollView>
@@ -128,10 +151,12 @@ export function ReviewScreen({ route, navigation }: Props) {
       <View style={styles.bottomBar}>
         <Button
           mode="contained"
-          contentStyle={{ paddingVertical: 6 }}
+          icon="calculator-variant"
+          contentStyle={{ paddingVertical: spacing.sm }}
           onPress={() =>
             navigation.navigate('Result', {
               examId,
+              studentId,
               studentName,
               photoUris,
               detectedAnswers: answers,
@@ -146,19 +171,100 @@ export function ReviewScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  subtitle: { color: '#374151', marginBottom: 4 },
-  qCard: { marginBottom: 10, padding: 12 },
-  qHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  qNumber: { fontWeight: '600', color: '#111827' },
-  qType: { color: '#6b7280', fontSize: 12 },
-  cells: { flexDirection: 'row', flexWrap: 'wrap' },
-  errorCard: { backgroundColor: '#fef2f2', marginBottom: 12, borderColor: '#fecaca', borderWidth: 1 },
+  loading: {
+    flex: 1,
+    backgroundColor: colors.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xxl,
+  },
+  loadingBox: { alignItems: 'center' },
+  loadingTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginTop: spacing.lg,
+  },
+  loadingHint: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
+
+  headerCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  studentLabel: { fontSize: 12, color: colors.textMuted, fontWeight: '600' },
+  studentName: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    marginTop: 2,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+  progressBar: {
+    flex: 1,
+    height: 8,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  progressFill: { height: '100%', backgroundColor: colors.accent },
+  progressText: { fontSize: 12, color: colors.textSecondary, fontWeight: '600' },
+  headerHint: { fontSize: 12, color: colors.textMuted, marginTop: spacing.sm },
+
+  errorCard: {
+    flexDirection: 'row',
+    backgroundColor: colors.warningLight,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.warning,
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
+  errorIcon: { fontSize: 20 },
+  errorText: { flex: 1, fontSize: 13, color: '#92400e', lineHeight: 18 },
+
+  qCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  qHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm },
+  qNumberBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: radius.full,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  qNumberText: { color: colors.primaryDark, fontWeight: '700', fontSize: 13 },
+  qType: { fontSize: 13, color: colors.textSecondary, fontWeight: '600' },
+  unknownChip: {
+    backgroundColor: colors.warningLight,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+  },
+  unknownChipText: { color: '#92400e', fontSize: 10, fontWeight: '700' },
+  cells: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 },
+
   bottomBar: {
     position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 16,
+    left: spacing.lg,
+    right: spacing.lg,
+    bottom: spacing.lg,
   },
 });
