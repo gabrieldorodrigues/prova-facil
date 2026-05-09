@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext } from "react";
 import {
   KeyboardAvoidingView,
   Modal,
@@ -7,9 +7,9 @@ import {
   ScrollView,
   Text,
   View,
-} from 'react-native';
+} from "react-native";
 
-import { cn } from '../../lib/utils';
+import { cn } from "../../lib/utils";
 
 interface DialogContextValue {
   close: () => void;
@@ -49,23 +49,26 @@ export function Dialog({
       onRequestClose={close}
     >
       <DialogContext.Provider value={{ close }}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          className="flex-1"
+        <Pressable
+          className="flex-1 bg-black/50 justify-center"
+          onPress={close}
+          keyboardShouldPersistTaps="handled"
         >
-          <Pressable className="flex-1 bg-black/50 justify-center" onPress={close}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+          >
             <Pressable
               onPress={() => {}}
-              style={{ maxHeight: '85%' }}
+              style={{ maxHeight: "85%" }}
               className={cn(
-                'mx-6 bg-bg-surface rounded-2xl overflow-hidden',
+                "mx-6 bg-bg-surface rounded-2xl overflow-hidden",
                 contentClasses,
               )}
             >
               {children}
             </Pressable>
-          </Pressable>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </Pressable>
       </DialogContext.Provider>
     </Modal>
   );
@@ -78,7 +81,7 @@ export function DialogTitle({
 }: React.ComponentPropsWithoutRef<typeof Text>) {
   return (
     <Text
-      className={cn('text-[18px] font-bold text-ink px-5 pt-5 pb-2', className)}
+      className={cn("text-[18px] font-bold text-ink px-5 pt-5 pb-2", className)}
       {...props}
     >
       {children}
@@ -90,11 +93,12 @@ export function DialogContent({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<typeof View>) {
-  return <View className={cn('px-5 pb-2', className)} {...props} />;
+  return <View className={cn("px-5 pb-2", className)} {...props} />;
 }
 
-interface DialogScrollAreaProps
-  extends React.ComponentPropsWithoutRef<typeof ScrollView> {
+interface DialogScrollAreaProps extends React.ComponentPropsWithoutRef<
+  typeof ScrollView
+> {
   className?: string;
 }
 
@@ -125,7 +129,7 @@ export function DialogActions({
   return (
     <View
       className={cn(
-        'flex-row justify-end items-center gap-2 px-3 py-3',
+        "flex-row justify-end items-center gap-2 px-3 py-3",
         className,
       )}
       {...props}
@@ -135,6 +139,6 @@ export function DialogActions({
 
 export function useDialog() {
   const ctx = useContext(DialogContext);
-  if (!ctx) throw new Error('useDialog must be used within Dialog');
+  if (!ctx) throw new Error("useDialog must be used within Dialog");
   return ctx;
 }
