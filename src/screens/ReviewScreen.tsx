@@ -238,7 +238,7 @@ export function ReviewScreen({ route, navigation }: Props) {
         >
           <View style={styles.headerTop}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.studentLabel}>Corrigindo prova de</Text>
+              <Text style={styles.studentLabel}>Corrigindo a avaliação de</Text>
               <Text style={styles.studentName}>{studentName}</Text>
             </View>
             <Ionicons name="pencil" size={20} color={colors.primary} />
@@ -341,7 +341,7 @@ export function ReviewScreen({ route, navigation }: Props) {
           {students.length === 0 ? (
             <View className="px-5 py-6">
               <Text className="text-ink-muted text-center">
-                Nenhum aluno cadastrado nas turmas desta prova. Use “Adicionar
+                Nenhum aluno cadastrado nas turmas desta avaliação. Use “Adicionar
                 aluno” para cadastrar e escolher a turma.
               </Text>
             </View>

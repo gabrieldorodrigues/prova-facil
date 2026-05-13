@@ -151,7 +151,7 @@ export function CaptureScreen({ route, navigation }: Props) {
     if (!selectedStudent)
       return Alert.alert('Atenção', 'Selecione o aluno antes de continuar.');
     if (photoUris.length === 0)
-      return Alert.alert('Atenção', 'Adicione pelo menos uma foto da prova.');
+      return Alert.alert('Atenção', 'Adicione pelo menos uma foto da avaliação.');
     navigation.navigate('Review', {
       examId,
       studentId: selectedStudent.id,
@@ -177,7 +177,7 @@ export function CaptureScreen({ route, navigation }: Props) {
     const nStu = students.length;
     if (nClass === 0) return 'Carregando turmas…';
     if (nStu === 0)
-      return `Nenhum aluno cadastrado nas ${nClass === 1 ? 'turma desta prova' : `${nClass} turmas desta prova`}.`;
+      return `Nenhum aluno cadastrado nas ${nClass === 1 ? 'turma desta avaliação' : `${nClass} turmas desta avaliação`}.`;
     const turmaWord = nClass === 1 ? 'turma' : 'turmas';
     const alunoWord = nStu === 1 ? 'aluno' : 'alunos';
     return `${nStu} ${alunoWord} em ${nClass} ${turmaWord} — toque abaixo para escolher.`;
@@ -204,7 +204,7 @@ export function CaptureScreen({ route, navigation }: Props) {
           <Text style={styles.stepLabel}>Passo 1 de 3</Text>
           <Text style={styles.stepTitle}>Identifique o aluno</Text>
           <Text style={styles.stepHint}>
-            Indique quem fez esta prova: escolha alguém já cadastrado ou cadastre
+            Indique quem fez esta avaliação: escolha alguém já cadastrado ou cadastre
             um aluno novo (só aparecem turmas ligadas a esta avaliação).
           </Text>
 
@@ -277,9 +277,9 @@ export function CaptureScreen({ route, navigation }: Props) {
 
         <View style={[styles.card, { marginTop: spacing.md }]}>
           <Text style={styles.stepLabel}>Passo 2 de 3</Text>
-          <Text style={styles.stepTitle}>Fotografe a prova</Text>
+          <Text style={styles.stepTitle}>Fotografe a avaliação</Text>
           <Text style={styles.stepHint}>
-            Várias fotos se a prova tiver mais de uma página.
+            Várias fotos se a avaliação tiver mais de uma página.
           </Text>
 
           <View style={styles.photoButtons}>
@@ -350,7 +350,7 @@ export function CaptureScreen({ route, navigation }: Props) {
         <DialogTitle>Escolher aluno</DialogTitle>
         <DialogScrollArea>
           <Text className="px-5 pb-3 text-[13px] text-ink-muted leading-[18px]">
-            Lista agrupada por turma. Só entram turmas em que esta prova está
+            Lista agrupada por turma. Só entram turmas em que esta avaliação está
             disponível.
           </Text>
           {students.length === 0 ? (
@@ -416,7 +416,7 @@ export function CaptureScreen({ route, navigation }: Props) {
                 Cadastrar aluno novo
               </Text>
               <Text className="text-[12px] text-ink-muted mt-0.5">
-                Nome e turma (turmas desta prova)
+                Nome e turma (turmas desta avaliação)
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#94a3b8" />

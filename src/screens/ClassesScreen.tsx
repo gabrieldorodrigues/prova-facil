@@ -75,7 +75,7 @@ export function ClassesScreen() {
         <EmptyState
           emoji="🏫"
           title="Cadastre sua primeira turma"
-          description="Organize suas avaliações por turma e reaproveite a lista de alunos em todas as provas."
+          description="Organize suas avaliações por turma e reaproveite a lista de alunos em todas as avaliações."
           actionLabel="Criar turma"
           onAction={() => setShowDialog(true)}
         />
@@ -119,7 +119,7 @@ export function ClassesScreen() {
                 </Text>
                 <View className="w-1 h-1 rounded-full bg-ink-subtle mx-2" />
                 <Text className="text-[12px] text-ink-muted">
-                  📝 {item.examCount} prova{item.examCount === 1 ? '' : 's'}
+                  📝 {item.examCount} avaliaç{item.examCount === 1 ? 'ão' : 'ões'}
                 </Text>
               </View>
             </View>

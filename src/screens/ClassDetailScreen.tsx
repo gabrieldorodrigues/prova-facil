@@ -92,7 +92,7 @@ export function ClassDetailScreen({ route, navigation }: Props) {
             <Text className="text-[20px] font-extrabold text-ink">{cls.name}</Text>
             <Text className="text-[12px] text-ink-subtle mt-0.5">
               {students.length} aluno{students.length === 1 ? '' : 's'} •{' '}
-              {exams.length} prova{exams.length === 1 ? '' : 's'}
+              {exams.length} avaliaç{exams.length === 1 ? 'ão' : 'ões'}
             </Text>
           </View>
           <IconButton
@@ -160,11 +160,11 @@ export function ClassDetailScreen({ route, navigation }: Props) {
         )}
 
         <SectionHeader
-          title="Provas atribuídas"
+          title="Avaliações atribuídas"
           hint={
             exams.length === 0
-              ? 'Nenhuma prova vinculada a esta turma'
-              : `${exams.length} prova(s) atribuída(s)`
+              ? 'Nenhuma avaliação vinculada a esta turma'
+              : `${exams.length} avaliaç${exams.length === 1 ? 'ão atribuída' : 'ões atribuídas'}`
           }
         />
 
@@ -172,7 +172,7 @@ export function ClassDetailScreen({ route, navigation }: Props) {
           <View className="bg-bg-surface rounded-2xl p-6 items-center">
             <Text className="text-[28px] mb-2">📭</Text>
             <Text className="text-[14px] text-ink-muted text-center">
-              As provas atribuídas a esta turma aparecem aqui.
+              As avaliações atribuídas a esta turma aparecem aqui.
             </Text>
           </View>
         ) : (
@@ -228,7 +228,7 @@ export function ClassDetailScreen({ route, navigation }: Props) {
         <DialogTitle>Excluir turma?</DialogTitle>
         <DialogContent>
           <Text className="text-[14px] text-ink-muted">
-            Esta ação remove a turma e todos os alunos. As provas que pertencem a
+            Esta ação remove a turma e todos os alunos. As avaliações que pertencem a
             outras turmas continuam, mas perderão a vinculação com esta.
           </Text>
         </DialogContent>

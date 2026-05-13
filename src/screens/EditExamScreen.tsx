@@ -85,7 +85,7 @@ export function EditExamScreen({ route, navigation }: Props) {
 
   const removeQuestion = (idx: number) => {
     if (questions.length === 1) {
-      toast('A prova precisa de pelo menos uma questão.', 'info', 2200);
+      toast('A avaliação precisa de pelo menos uma questão.', 'info', 2200);
       return;
     }
     setQuestions((prev) =>
@@ -111,7 +111,7 @@ export function EditExamScreen({ route, navigation }: Props) {
 
   const handleSave = async () => {
     if (!original) return;
-    if (!name.trim()) return Alert.alert('Atenção', 'Informe o nome da prova.');
+    if (!name.trim()) return Alert.alert('Atenção', 'Informe o nome da avaliação.');
     if (classIds.length === 0)
       return Alert.alert('Atenção', 'Selecione pelo menos uma turma.');
     if (questions.length === 0)
@@ -144,10 +144,10 @@ export function EditExamScreen({ route, navigation }: Props) {
       >
         <View className="bg-bg-surface rounded-2xl p-4">
           <Text className="text-[12px] font-bold text-ink-muted uppercase tracking-wider mb-3">
-            Informações da prova
+            Informações da avaliação
           </Text>
           <Input
-            label="Nome da prova"
+            label="Nome da avaliação"
             value={name}
             onChangeText={setName}
             containerClasses="mb-3"

@@ -198,14 +198,14 @@ export function ExamDetailScreen({ route, navigation }: Props) {
                 icon="pencil-outline"
                 size={20}
                 color={colors.primary}
-                accessibilityLabel="Editar prova"
+                accessibilityLabel="Editar avaliação"
                 onPress={() => navigation.navigate('EditExam', { examId })}
               />
               <IconButton
                 icon="trash-outline"
                 size={20}
                 color={colors.danger}
-                accessibilityLabel="Excluir prova"
+                accessibilityLabel="Excluir avaliação"
                 onPress={() => setConfirmDelete(true)}
               />
             </View>
@@ -231,7 +231,7 @@ export function ExamDetailScreen({ route, navigation }: Props) {
             <StatCard
               label="Melhor"
               value={overallStats.best.toFixed(1).replace('.', ',')}
-              hint={`${overallStats.total} provas`}
+              hint={`${overallStats.total} correções`}
               tint={colors.accent}
             />
             <View className="w-2" />
@@ -306,7 +306,7 @@ export function ExamDetailScreen({ route, navigation }: Props) {
           hint={
             corrections.length === 0
               ? 'Nenhum aluno corrigido ainda'
-              : `${corrections.length} prova(s) corrigida(s)`
+              : `${corrections.length} aluno${corrections.length === 1 ? '' : 's'} corrigido${corrections.length === 1 ? '' : 's'}`
           }
         />
 
@@ -314,7 +314,7 @@ export function ExamDetailScreen({ route, navigation }: Props) {
           <EmptyState
             emoji="📸"
             title="Pronto para corrigir"
-            description="Use 'Corrigir em lote' para enviar várias provas de uma vez ou corrija um aluno por vez."
+            description="Use 'Corrigir em lote' para enviar várias avaliações de uma vez ou corrija um aluno por vez."
           />
         ) : (
           <>
@@ -337,10 +337,10 @@ export function ExamDetailScreen({ route, navigation }: Props) {
       </ScrollView>
 
       <Dialog open={confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(false)}>
-        <DialogTitle>Excluir prova?</DialogTitle>
+        <DialogTitle>Excluir avaliação?</DialogTitle>
         <DialogContent>
           <Text className="text-[14px] text-ink-muted">
-            Esta ação remove a prova e todas as correções dos alunos. Não é possível
+            Esta ação remove a avaliação e todas as correções dos alunos. Não é possível
             desfazer.
           </Text>
         </DialogContent>
@@ -403,7 +403,7 @@ export function ExamDetailScreen({ route, navigation }: Props) {
                 Excluir correção
               </Text>
               <Text className="text-[12px] text-ink-subtle">
-                Remove permanentemente esta prova corrigida
+                Remove permanentemente esta correção
               </Text>
             </View>
           </Pressable>
@@ -422,7 +422,7 @@ export function ExamDetailScreen({ route, navigation }: Props) {
         <DialogTitle>Excluir correção?</DialogTitle>
         <DialogContent>
           <Text className="text-[14px] text-ink-muted">
-            A correção desta prova será removida. Não é possível desfazer.
+            Esta correção será removida. Não é possível desfazer.
           </Text>
         </DialogContent>
         <DialogActions>

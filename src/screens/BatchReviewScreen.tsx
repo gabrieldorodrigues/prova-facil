@@ -197,8 +197,8 @@ export function BatchReviewScreen({ route, navigation }: Props) {
     const unidentified = entries.filter((e) => !e.studentId);
     if (unidentified.length > 0) {
       Alert.alert(
-        "Algumas provas sem aluno",
-        `${unidentified.length} prova(s) ainda estão sem aluno selecionado. Deseja salvar mesmo assim?`,
+        "Algumas avaliações sem aluno",
+        `${unidentified.length} avaliaç${unidentified.length === 1 ? 'ão ainda está' : 'ões ainda estão'} sem aluno selecionado. Deseja salvar mesmo assim?`,
         [
           { text: "Cancelar", style: "cancel" },
           { text: "Salvar tudo", onPress: () => doSave() },
@@ -249,7 +249,7 @@ export function BatchReviewScreen({ route, navigation }: Props) {
     return (
       <View style={styles.loadingScreen}>
         <Spinner size="large" color={colors.primary} />
-        <Text style={styles.loadingTitle}>Analisando provas com IA</Text>
+        <Text style={styles.loadingTitle}>Analisando avaliações com IA</Text>
         <Text style={styles.loadingHint}>
           {progress.done} de {progress.total} processadas...
         </Text>
@@ -272,7 +272,7 @@ export function BatchReviewScreen({ route, navigation }: Props) {
       >
         <View style={[styles.summaryCard, elevation.sm]}>
           <Text style={styles.summaryTitle}>
-            {summary.total} prova(s) processada(s)
+            {summary.total} avaliaç{summary.total === 1 ? 'ão processada' : 'ões processadas'}
           </Text>
           <View style={styles.summaryStats}>
             <View style={styles.summaryStat}>

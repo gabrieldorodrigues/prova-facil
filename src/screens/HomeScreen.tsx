@@ -107,7 +107,7 @@ export function HomeScreen() {
         />
         <View className="w-2" />
         <StatCard
-          label="Provas"
+          label="Avaliações"
           value={String(stats.examCount)}
           hint="cadastradas"
           tint={colors.accent}
@@ -138,7 +138,7 @@ export function HomeScreen() {
         />
         <QuickAction
           emoji="📝"
-          label="Nova prova"
+          label="Nova avaliação"
           hint="cadastrar"
           onPress={() => navigation.navigate('CreateExam', {})}
         />
@@ -148,10 +148,10 @@ export function HomeScreen() {
         <>
           <View className="flex-row items-center justify-between mt-6 mb-2">
             <Text className="text-[13px] font-bold text-ink-muted uppercase tracking-wider">
-              Provas recentes
+              Avaliações recentes
             </Text>
             <Pressable
-              onPress={() => navigation.navigate('ProvasTab')}
+              onPress={() => navigation.navigate('AvaliacoesTab')}
               hitSlop={8}
               className="active:opacity-60"
             >
@@ -207,7 +207,7 @@ export function HomeScreen() {
         <View className="bg-bg-surface rounded-2xl p-6 mt-6 items-center">
           <Text className="text-[36px] mb-2">📝</Text>
           <Text className="text-[16px] font-bold text-ink mb-1">
-            Comece criando uma prova
+            Comece criando uma avaliação
           </Text>
           <Text className="text-[13px] text-ink-muted text-center mb-4">
             Cadastre uma turma e em seguida sua primeira avaliação.

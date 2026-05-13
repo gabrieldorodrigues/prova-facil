@@ -84,7 +84,7 @@ function buildPrompt(exam: Exam, withName: boolean): string {
     ? `
 
 NOME DO ALUNO:
-- Procure o nome do aluno escrito no cabeçalho da prova (geralmente em campo "Nome:", "Aluno:" ou similar).
+- Procure o nome do aluno escrito no cabeçalho da avaliação (geralmente em campo "Nome:", "Aluno:" ou similar).
 - Retorne o nome em "studentName" exatamente como está escrito.
 - Em "studentNameConfidence" use:
   • "high" se está claramente legível.
@@ -94,7 +94,7 @@ NOME DO ALUNO:
 - Se "none", deixe studentName como string vazia.`
     : '';
 
-  return `Você é um assistente de correção de provas escolares brasileiras.${namePart}
+  return `Você é um assistente de correção de avaliações escolares brasileiras.${namePart}
 
 RESPOSTAS:
 Para cada questão listada, identifique qual alternativa o aluno marcou.

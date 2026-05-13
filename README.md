@@ -1,6 +1,6 @@
-# 📝 Prova Fácil
+# 📝 Avaliação Fácil
 
-> Aplicativo mobile de correção inteligente de provas escolares por foto, usando visão computacional e IA generativa.
+> Aplicativo mobile de correção inteligente de avaliações escolares por foto, usando visão computacional e IA generativa.
 
 [![Expo](https://img.shields.io/badge/Expo-SDK%2054-000020?logo=expo)](https://expo.dev)
 [![React Native](https://img.shields.io/badge/React%20Native-0.81-61dafb?logo=react)](https://reactnative.dev)
@@ -24,13 +24,13 @@
 
 ## 🎯 Visão geral
 
-O **Prova Fácil** transforma o smartphone do professor em um corretor automático de avaliações.
+O **Avaliação Fácil** transforma o smartphone do professor em um corretor automático de avaliações.
 
 O fluxo é simples e poderoso:
 
 1. O professor cadastra **turmas** e os **alunos** de cada uma.
-2. Cria uma prova com nome, turmas atribuídas, questões e gabarito (com peso por questão).
-3. Tira fotos das provas respondidas — uma por vez (por aluno) ou em lote (várias de uma turma).
+2. Cria uma avaliação com nome, turmas atribuídas, questões e gabarito (com peso por questão).
+3. Tira fotos das avaliações respondidas — uma por vez (por aluno) ou em lote (várias de uma turma).
 4. A IA do Google Gemini lê as marcações **e o nome do aluno** no cabeçalho.
 5. O app faz fuzzy match contra a lista de alunos da turma, e o professor confirma/ajusta.
 6. A nota é calculada automaticamente no sistema brasileiro de 0 a 10.
@@ -46,15 +46,15 @@ O fluxo é simples e poderoso:
 
 | Funcionalidade | Descrição |
 |---|---|
-| 🏫 **Gestão de turmas e alunos** | Cadastro de turmas, alunos por turma, com avatares e contadores. Provas podem ser atribuídas a múltiplas turmas. |
-| 📋 **Cadastro/edição de provas** | Nome, múltiplas turmas, questões dinâmicas com 3 tipos (A–E, A–D, V/F), pesos individuais e helper para distribuir pesos automaticamente. Edição posterior preservando correções já feitas. |
-| 📸 **Captura por foto** | Câmera ou galeria, múltiplas fotos por prova (várias páginas), pré-visualização com miniaturas numeradas |
+| 🏫 **Gestão de turmas e alunos** | Cadastro de turmas, alunos por turma, com avatares e contadores. Avaliações podem ser atribuídas a múltiplas turmas. |
+| 📋 **Cadastro/edição de avaliações** | Nome, múltiplas turmas, questões dinâmicas com 3 tipos (A–E, A–D, V/F), pesos individuais e helper para distribuir pesos automaticamente. Edição posterior preservando correções já feitas. |
+| 📸 **Captura por foto** | Câmera ou galeria, múltiplas fotos por avaliação (várias páginas), pré-visualização com miniaturas numeradas |
 | 🤖 **Detecção por IA** | Google Gemini 3.1 Flash Lite (Vision) analisa as marcações e retorna JSON estruturado, com `responseSchema` |
-| 👥 **Identificação automática de aluno** | A IA também lê o nome no cabeçalho da prova; o app faz fuzzy match com a lista de alunos da turma |
-| 🚀 **Correção em lote** | Tira N fotos, processa todas em paralelo, revisa em uma tela única — ~12min para 30 provas |
+| 👥 **Identificação automática de aluno** | A IA também lê o nome no cabeçalho da avaliação; o app faz fuzzy match com a lista de alunos da turma |
+| 🚀 **Correção em lote** | Tira N fotos, processa todas em paralelo, revisa em uma tela única — ~12min para 30 avaliações |
 | ✏️ **Revisão editável** | Professor pode ajustar qualquer resposta detectada com um toque; questões inseguras aparecem com chip "verificar" |
 | 🎯 **Correção automática** | Cálculo ponderado da nota (0–10), com classificação Aprovado / Recuperação / Reprovado |
-| 📊 **Dashboard da prova** | Estatísticas da turma, média, melhor nota, aprovados; gabarito oficial; correções agrupadas por turma |
+| 📊 **Dashboard da avaliação** | Estatísticas da turma, média, melhor nota, aprovados; gabarito oficial; correções agrupadas por turma |
 | 📤 **Exportação CSV** | Compartilhamento via Share Sheet do iOS (WhatsApp, e-mail, Drive, AirDrop, etc.) |
 | 💾 **Persistência local** | AsyncStorage com migração automática entre versões; funciona offline (exceto a chamada da IA) |
 | 🎨 **UI moderna** | Componentes próprios estilo nativecn-ui (shadcn-for-RN) sobre NativeWind + Tailwind, paleta azul/amarelo/verde, dialogs nativos via Modal RN |
@@ -65,7 +65,7 @@ O fluxo é simples e poderoso:
 |---|---|
 | **2** | Correção de questões discursivas via IA, detecção de escrita manual, feedback automático ao aluno |
 | **3** | Dashboard escolar, relatórios PDF, gestão de turmas, histórico longitudinal, IA fine-tuned para padrões educacionais brasileiros |
-| **Futuro** | QR Code na prova, leitura em lote, detecção de cola, geração automática de provas, integração com Google Classroom |
+| **Futuro** | QR Code na avaliação, leitura em lote, detecção de cola, geração automática de avaliações, integração com Google Classroom |
 
 ---
 
@@ -149,7 +149,7 @@ Professor abre app
        │
        ▼
 ┌────────────────────────┐   ┌────────────────────────┐
-│  Cria prova            │──▶│ Salva exam com        │
+│  Cria avaliação        │──▶│ Salva exam com        │
 │  + gabarito            │   │ classIds[]            │
 │  + atribui à(s) turma(s)   │                       │
 └────────────────────────┘   └────────────────────────┘
@@ -266,15 +266,15 @@ prova-facil/
     │   └── ClassMultiSelectDialog.tsx   # seleção de múltiplas turmas com criar nova
     │
     ├── navigation/
-    │   └── AppNavigator.tsx             # RootStack + bottom tabs (Home/TurmasTab/ProvasTab)
+    │   └── AppNavigator.tsx             # RootStack + bottom tabs (Home/TurmasTab/AvaliacoesTab)
     │
     └── screens/
-        ├── HomeScreen.tsx               # dashboard com stats + ações rápidas + provas recentes
+        ├── HomeScreen.tsx               # dashboard com stats + ações rápidas + avaliações recentes
         ├── ClassesScreen.tsx            # lista de turmas (aba Turmas)
-        ├── ClassDetailScreen.tsx        # alunos da turma + provas atribuídas
-        ├── ExamsScreen.tsx              # lista de provas (aba Provas)
-        ├── CreateExamScreen.tsx         # cadastro de prova (multi-turma)
-        ├── EditExamScreen.tsx           # edição de prova existente
+        ├── ClassDetailScreen.tsx        # alunos da turma + avaliações atribuídas
+        ├── ExamsScreen.tsx              # lista de avaliações (aba Avaliações)
+        ├── CreateExamScreen.tsx         # cadastro de avaliação (multi-turma)
+        ├── EditExamScreen.tsx           # edição de avaliação existente
         ├── ExamDetailScreen.tsx         # gabarito + correções por turma + CSV
         ├── CaptureScreen.tsx            # selecionar aluno + fotos (correção individual)
         ├── BatchCaptureScreen.tsx       # selecionar turma + N fotos (correção em lote)
@@ -382,7 +382,7 @@ interface Correction {
 }
 ```
 
-> **Migração v1 → v2:** dados gravados antes da introdução de turmas/alunos são migrados automaticamente na primeira leitura (`@provafacil/migration_v2_done`). Provas com `className` viram `classIds: [<gerado>]`; correções com `studentName` ganham `studentId` quando há match na turma da prova.
+> **Migração v1 → v2:** dados gravados antes da introdução de turmas/alunos são migrados automaticamente na primeira leitura (`@provafacil/migration_v2_done`). Avaliações com `className` viram `classIds: [<gerado>]`; correções com `studentName` ganham `studentId` quando há match na turma da avaliação.
 
 ### Cálculo da nota
 
@@ -423,7 +423,7 @@ A nota é arredondada para **uma casa decimal**, no padrão brasileiro (0–10).
 - **Dados armazenados localmente** no AsyncStorage do dispositivo. Nada é enviado a servidores próprios.
 - **Imagens enviadas ao Google Gemini** apenas durante a correção. O Google declara não usar dados pagos da API para treinar modelos. Para usuários do tier gratuito, recomendamos consultar a [política de uso de dados do Google AI Studio](https://ai.google.dev/gemini-api/terms).
 - **Chave de API**: para distribuição em loja, mover a chamada do Gemini para um backend proxy próprio (a chave `EXPO_PUBLIC_*` fica visível no bundle).
-- **Direito do aluno**: o professor é responsável pela LGPD ao fotografar provas com identificação pessoal. Recomendação: borrar nomes na captura quando não forem necessários.
+- **Direito do aluno**: o professor é responsável pela LGPD ao fotografar avaliações com identificação pessoal. Recomendação: borrar nomes na captura quando não forem necessários.
 
 ---
 

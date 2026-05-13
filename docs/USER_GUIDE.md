@@ -1,6 +1,6 @@
-# 📖 Manual do Professor — Prova Fácil
+# 📖 Manual do Professor — Avaliação Fácil
 
-Bem-vindo(a) ao Prova Fácil! Este guia mostra como usar o app no dia a dia para corrigir provas escolares em poucos minutos.
+Bem-vindo(a) à Avaliação Fácil! Este guia mostra como usar o app no dia a dia para corrigir avaliações escolares em poucos minutos.
 
 ---
 
@@ -8,11 +8,11 @@ Bem-vindo(a) ao Prova Fácil! Este guia mostra como usar o app no dia a dia para
 
 1. [Começando](#1-começando)
 2. [Cadastrando turmas e alunos](#2-cadastrando-turmas-e-alunos)
-3. [Cadastrando uma prova](#3-cadastrando-uma-prova)
+3. [Cadastrando uma avaliação](#3-cadastrando-uma-avaliacao)
 4. [Corrigindo um aluno por vez](#4-corrigindo-um-aluno-por-vez)
 5. [Correção em lote](#5-correção-em-lote)
 6. [Visualizando os resultados da turma](#6-visualizando-os-resultados-da-turma)
-7. [Editando uma prova](#7-editando-uma-prova)
+7. [Editando uma avaliação](#7-editando-uma-avaliacao)
 8. [Exportando notas em CSV](#8-exportando-notas-em-csv)
 9. [Dicas para melhor leitura por IA](#9-dicas-para-melhor-leitura-por-ia)
 10. [Solução de problemas](#10-solução-de-problemas)
@@ -23,9 +23,9 @@ Bem-vindo(a) ao Prova Fácil! Este guia mostra como usar o app no dia a dia para
 
 Após instalar o app e configurar a chave da API (veja o [README](../README.md)), você verá a tela inicial com **3 abas no rodapé**:
 
-- **Início** — dashboard com estatísticas, ações rápidas e provas recentes.
+- **Início** — dashboard com estatísticas, ações rápidas e avaliações recentes.
 - **Turmas** — gestão das turmas e alunos.
-- **Provas** — lista completa das avaliações cadastradas.
+- **Avaliações** — lista completa das avaliações cadastradas.
 
 ```
 ┌──────────────────────────────────────┐
@@ -33,31 +33,31 @@ Após instalar o app e configurar a chave da API (veja o [README](../README.md))
 │ Resumo das suas correções            │
 │                                      │
 │ ┌────────┐ ┌────────┐ ┌────────┐     │
-│ │ Turmas │ │ Provas │ │ Média  │     │
+│ │ Turmas │ │ Avaliações │ │ Média  │     │
 │ │   2    │ │   3    │ │  7,2   │     │
 │ └────────┘ └────────┘ └────────┘     │
 │                                      │
 │ AÇÕES RÁPIDAS                        │
 │ ┌──────────────┐ ┌──────────────┐    │
 │ │  🏫          │ │  📝          │    │
-│ │  Nova turma  │ │  Nova prova  │    │
+│ │  Nova turma  │ │ Nova avaliação │    │
 │ └──────────────┘ └──────────────┘    │
 │                                      │
-│ PROVAS RECENTES        [Ver todas]   │
+│ AVALIAÇÕES RECENTES    [Ver todas]   │
 │ ┌──────────────────────────────┐     │
 │ │ 9A · Matemática 1º Bim 7,2 ⭐ │     │
 │ │ 10 questões • 12 alunos      │     │
 │ └──────────────────────────────┘     │
 ├──────────────────────────────────────┤
-│  Início    Turmas    Provas          │
+│  Início    Turmas  Avaliações        │
 └──────────────────────────────────────┘
 ```
 
-- **Stats** no topo: turmas, provas e média geral.
-- **Ações rápidas**: atalhos para criar turma ou prova.
-- **Provas recentes**: 3 últimas; toque pra abrir detalhe.
+- **Stats** no topo: turmas, avaliações e média geral.
+- **Ações rápidas**: atalhos para criar turma ou avaliação.
+- **Avaliações recentes**: 3 últimas; toque pra abrir detalhe.
 
-> Antes de cadastrar a primeira prova, **cadastre suas turmas e alunos** — assim a IA consegue identificar automaticamente quem fez cada prova e a navegação fica mais fluida.
+> Antes de cadastrar a primeira avaliação, **cadastre suas turmas e alunos** — assim a IA consegue identificar automaticamente quem fez cada avaliação e a navegação fica mais fluida.
 
 ---
 
@@ -85,15 +85,15 @@ Digite o nome (ex.: "9º A — Manhã") e toque em **Criar**.
 - Na tela de detalhe da turma, ícone de lixeira no topo apaga a turma (com confirmação).
 - Toque em **Remover** ao lado de cada aluno na lista.
 
-> ⚠️ Excluir uma turma apaga **todos os alunos** dela. Provas atribuídas só àquela turma também são removidas, e suas correções junto. Provas em múltiplas turmas continuam, perdendo só o vínculo com a turma deletada.
+> ⚠️ Excluir uma turma apaga **todos os alunos** dela. Avaliações atribuídas só àquela turma também são removidas, e suas correções junto. Avaliações em múltiplas turmas continuam, perdendo só o vínculo com a turma deletada.
 
 ---
 
-## 3. Cadastrando uma prova
+## 3. Cadastrando uma avaliação
 
-1. Aba **Início** → ação rápida **📝 Nova prova**, ou aba **Provas** → FAB **+ Nova prova**.
+1. Aba **Início** → ação rápida **📝 Nova avaliação**, ou aba **Avaliações** → FAB **+ Nova avaliação**.
 2. Preencha:
-   - **Nome da prova** (ex.: "Matemática 1º Bimestre").
+   - **Nome da avaliação** (ex.: "Matemática 1º Bimestre").
    - **Turmas** – toque em "Adicionar turmas" e selecione **uma ou mais**. Pode criar uma nova turma direto desse dialog.
 3. Para cada questão, configure:
    - **Tipo** – Múltipla A-E, Múltipla A-D ou V/F (segmented control).
@@ -101,11 +101,11 @@ Digite o nome (ex.: "9º A — Manhã") e toque em **Criar**.
    - **Peso** – valor numérico. Pode ser decimal (ex.: 0,5).
 4. Toque em **+ Adicionar questão** para incluir mais.
 5. Use o botão **⚖ Distribuir = 10** para dividir os pesos automaticamente em soma 10.
-6. Toque em **💾 Salvar prova** quando terminar.
+6. Toque em **💾 Salvar avaliação** quando terminar.
 
 > 💡 **Dica:** o app aceita qualquer soma de pesos. Se a soma der 30, o app calcula proporcionalmente. Mas quando a soma é 10, o peso de cada questão equivale ao peso na nota final – mais fácil de comunicar com os alunos.
 
-### Exemplo: prova de 5 questões
+### Exemplo: avaliação de 5 questões
 
 | # | Tipo | Resposta | Peso |
 |---|------|----------|------|
@@ -122,27 +122,27 @@ Cada questão vale 2 pontos. Se o aluno acertar 4 das 5, sua nota será **8,0**.
 
 ## 4. Corrigindo um aluno por vez
 
-Use quando você tem só uma ou duas provas pra corrigir, ou quando quer revisar com calma uma a uma.
+Use quando você tem só uma ou duas avaliações pra corrigir, ou quando quer revisar com calma uma a uma.
 
-A partir do detalhe da prova, toque em **👤 Corrigir um aluno por vez**.
+A partir do detalhe da avaliação, toque em **👤 Corrigir um aluno por vez**.
 
 ### Passo 1 – Selecionar o aluno
 
-Toque em **Selecionar aluno**. Aparece a lista de alunos das turmas atribuídas à prova, agrupados por turma.
+Toque em **Selecionar aluno**. Aparece a lista de alunos das turmas atribuídas à avaliação, agrupados por turma.
 
 - Toque no aluno desejado.
 - Se o aluno não estiver cadastrado, toque em **＋ Adicionar aluno** no rodapé do dialog para criá-lo na hora.
 
-### Passo 2 – Fotografar a prova
+### Passo 2 – Fotografar a avaliação
 
 Duas opções:
 
 | Opção | Quando usar |
 |---|---|
-| **📷 Tirar foto** | Você está com a prova física na mão (cenário comum) |
-| **🖼 Galeria** | A prova já foi fotografada antes ou foi enviada por WhatsApp |
+| **📷 Tirar foto** | Você está com a folha da avaliação na mão (cenário comum) |
+| **🖼 Galeria** | A avaliação já foi fotografada antes ou foi enviada por WhatsApp |
 
-Várias fotos se a prova tiver mais de uma página.
+Várias fotos se a avaliação tiver mais de uma página.
 
 ### Passo 3 – Continuar para revisão
 
@@ -155,7 +155,7 @@ Toque em **Continuar para revisão →**. O app envia as fotos ao Gemini.
    Lendo as marcações nas 2 fotos...
 ```
 
-Geralmente leva **3 a 8 segundos** por prova.
+Geralmente leva **3 a 8 segundos** por avaliação.
 
 ### Passo 5 – Revisar as respostas detectadas
 
@@ -182,26 +182,26 @@ Toque em **🧮 Calcular nota**. A tela de resultado mostra:
 
 ### Passo 7 – Salvar
 
-Toque em **✓ Salvar correção**. Você volta automaticamente para o detalhe da prova com a nota do aluno listada.
+Toque em **✓ Salvar correção**. Você volta automaticamente para o detalhe da avaliação com a nota do aluno listada.
 
 ---
 
 ## 5. Correção em lote
 
-Use quando você tem várias provas da **mesma turma** pra corrigir de uma vez. A IA tenta identificar automaticamente o nome de cada aluno no cabeçalho.
+Use quando você tem várias avaliações da **mesma turma** pra corrigir de uma vez. A IA tenta identificar automaticamente o nome de cada aluno no cabeçalho.
 
-A partir do detalhe da prova, toque em **✨ Corrigir em lote**.
+A partir do detalhe da avaliação, toque em **✨ Corrigir em lote**.
 
 ### Passo 1 – Selecionar a turma do lote
 
-Se a prova foi atribuída a uma única turma, ela já vem selecionada. Se há mais de uma, toque em "Selecionar" e escolha.
+Se a avaliação foi atribuída a uma única turma, ela já vem selecionada. Se há mais de uma, toque em "Selecionar" e escolha.
 
 ### Passo 2 – Adicionar fotos
 
-- **📷 Câmera** — fotografe cada prova em sequência.
+- **📷 Câmera** — fotografe cada folha/resposta em sequência.
 - **🖼 Galeria** — selecione várias fotos de uma vez.
 
-Cada foto é uma prova de um aluno. Use o **X vermelho** para remover fotos erradas.
+Cada foto corresponde a uma avaliação de um aluno. Use o **X vermelho** para remover fotos erradas.
 
 ### Passo 3 – Processar com IA
 
@@ -209,8 +209,8 @@ Toque em **Processar com IA ✨**. O app processa as fotos em paralelo. Você v�
 
 ### Passo 4 – Revisar o lote
 
-Cada prova vira um card mostrando:
-- **Foto** + número da prova.
+Cada entrada vira um card mostrando:
+- **Foto** + número do item na fila.
 - **Nome detectado** — quando a IA leu e o app encontrou correspondência na turma, aparece o nome do aluno em destaque.
 - **⚠ Aluno não identificado** — IA não leu o nome ou não casou com nenhum aluno cadastrado. Tem o aviso "IA leu: '...' — sem match na turma".
 - **Nota provisória** (calculada com as respostas detectadas).
@@ -225,13 +225,13 @@ Use o **X** ao lado da nota pra descartar uma entrada (foto borrada, aluno errad
 
 Toque em **Salvar X correção(ões) ✓✓**. Se houver entradas sem aluno selecionado, o app pergunta se você quer salvar mesmo assim (vão ficar sem aluno identificado e podem ser atribuídas depois).
 
-> 🚀 **Dica de produtividade:** com fotos boas, o lote de 30 provas leva ~12 minutos no total — a IA acerta a maioria, e você só revisa os casos duvidosos.
+> 🚀 **Dica de produtividade:** com fotos boas, o lote de 30 avaliações leva ~12 minutos no total — a IA acerta a maioria, e você só revisa os casos duvidosos.
 
 ---
 
 ## 6. Visualizando os resultados da turma
 
-No detalhe da prova, você vê:
+No detalhe da avaliação, você vê:
 
 - **Estatísticas globais**: média, melhor nota, aprovados.
 - **Botões de ação**: Corrigir em lote / CSV / Corrigir um aluno por vez.
@@ -243,12 +243,12 @@ No detalhe da prova, você vê:
 
 ---
 
-## 7. Editando uma prova
+## 7. Editando uma avaliação
 
-Não precisa apagar e refazer. No detalhe da prova, toque no ícone de **lápis** no canto superior direito.
+Não precisa apagar e refazer. No detalhe da avaliação, toque no ícone de **lápis** no canto superior direito.
 
 Você pode mudar:
-- Nome da prova.
+- Nome da avaliação.
 - Turmas atribuídas (adicionar/remover).
 - Adicionar, remover ou ajustar questões e pesos.
 
@@ -258,7 +258,7 @@ Você pode mudar:
 
 ## 8. Exportando notas em CSV
 
-No detalhe da prova, toque em **⬇ CSV**.
+No detalhe da avaliação, toque em **⬇ CSV**.
 
 O iOS abre a tela de compartilhamento. Você pode enviar para:
 
@@ -289,7 +289,7 @@ A qualidade da detecção depende muito de como a foto é tirada. Siga estas dic
 | Luz natural ou iluminação uniforme | Sombras parciais sobre a folha |
 | Folha apoiada em superfície plana | Folha amassada ou dobrada |
 | Foto perpendicular à folha | Foto inclinada (perspectiva extrema) |
-| Toda a folha enquadrada | Cortes em parte da prova |
+| Toda a folha enquadrada | Cortes em parte da avaliação |
 | Marcações em caneta ou lápis bem traçado | Marcações muito leves ou apagadas |
 | Uma página por foto (se houver várias) | Tentar caber duas páginas em uma foto |
 
@@ -312,7 +312,7 @@ A IA não pode rodar sem a chave do Google Gemini.
    ```
 4. Reinicie o app: `Ctrl+C` no terminal e `npx expo start --clear`.
 
-> Mesmo sem a chave, o app abre normal e você consegue cadastrar provas e corrigir manualmente. Só a detecção automática fica desabilitada.
+> Mesmo sem a chave, o app abre normal e você consegue cadastrar avaliações e corrigir manualmente. Só a detecção automática fica desabilitada.
 
 ### "Falha ao chamar a IA"
 
@@ -326,12 +326,12 @@ A tela de revisão sempre permite preenchimento manual como fallback.
 ### "A IA está detectando errado"
 
 - **Tire fotos com mais luz e sem inclinação.**
-- **Verifique o gabarito** – se o tipo da questão estiver errado (ex.: você cadastrou A–E mas a prova tem A–D), a IA pode confundir.
+- **Verifique o gabarito** – se o tipo da questão estiver errado (ex.: você cadastrou A–E mas a folha da avaliação tem A–D), a IA pode confundir.
 - **Use a tela de revisão** – ajustar com o dedo é rápido. A IA acerta a maioria; você corrige o resto.
 
 ### "Esqueci de adicionar uma questão"
 
-Toque no ícone de **lápis** no detalhe da prova para editar — veja [seção 7](#7-editando-uma-prova). Lembre-se: alterar o gabarito **não recalcula correções já feitas**.
+Toque no ícone de **lápis** no detalhe da avaliação para editar — veja [seção 7](#7-editando-uma-avaliacao). Lembre-se: alterar o gabarito **não recalcula correções já feitas**.
 
 ### "A IA leu o nome do aluno errado no lote"
 

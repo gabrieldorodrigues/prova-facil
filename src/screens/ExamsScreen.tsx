@@ -58,9 +58,9 @@ export function ExamsScreen() {
       <View className="flex-1 bg-bg justify-center items-center px-8">
         <EmptyState
           emoji="📝"
-          title="Nenhuma prova ainda"
-          description="Cadastre sua primeira avaliação. Você pode corrigir várias provas de uma vez com correção em lote."
-          actionLabel="Criar prova"
+          title="Nenhuma avaliação ainda"
+          description="Cadastre sua primeira avaliação. Você pode corrigir várias de uma vez com correção em lote."
+          actionLabel="Criar avaliação"
           onAction={() => navigation.navigate('CreateExam', {})}
         />
       </View>
@@ -117,8 +117,8 @@ export function ExamsScreen() {
 
       <Fab
         icon="add"
-        label="Nova prova"
-        accessibilityLabel="Criar nova prova"
+        label="Nova avaliação"
+        accessibilityLabel="Criar nova avaliação"
         onPress={() => navigation.navigate('CreateExam', {})}
       />
     </View>

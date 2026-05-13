@@ -1,4 +1,4 @@
-# 🏗 Arquitetura Técnica — Prova Fácil
+# 🏗 Arquitetura Técnica — Avaliação Fácil
 
 Documento técnico detalhado do MVP. Para visão geral do produto, ver [README](../README.md). Para uso pelo professor, ver [Manual do Professor](USER_GUIDE.md).
 
@@ -42,7 +42,7 @@ OpenCV e Google ML Kit precisam de código nativo, **incompatível com Expo Go**
 3. **Marcações estilo "bubble sheet"** com OpenCV – exige template fixo, formulário pré-impresso, e prebuild com módulo nativo.
 
 A API de visão venceu por:
-- **Não exige template fixo** – professor pode usar qualquer prova existente.
+- **Não exige template fixo** – professor pode usar qualquer avaliação existente.
 - **Lida com rasuras, marcações múltiplas, variações de caligrafia** com instrução em linguagem natural.
 - **Retorna JSON estruturado** via `responseSchema` – zero parsing frágil.
 - **Custo desprezível** no tier gratuito do Gemini para uso pessoal.
@@ -115,7 +115,7 @@ Primitivos copiados via `npx nativecn-ui add` e customizados:
 
 ### `src/services/` – Camada de integração
 - `storage.ts` – AsyncStorage com 4 coleções + migração v1→v2 transparente + `findStudentByName` (fuzzy match).
-- `geminiVision.ts` – API HTTP do Google Gemini, expondo `detectAnswers` (1 prova) e `detectBatch` (várias em paralelo, com callback de progresso).
+- `geminiVision.ts` – API HTTP do Google Gemini, expondo `detectAnswers` (1 avaliação) e `detectBatch` (várias em paralelo, com callback de progresso).
 - `csvExport.ts` – sistema de arquivos + Share Sheet, agrupamento por turma.
 
 ### `src/utils/` – Funções puras
@@ -187,7 +187,7 @@ interface Correction {
 - **`number` separado do `id`** – número da questão é apresentação, ID é identidade. Permite reordenar questões mantendo histórico de correções.
 - **`detectedAnswers` como `Record<string, string>`** – usa o ID da questão como chave, robusto a reordenação.
 - **`score` denormalizado** – armazena o resultado calculado para evitar recalcular ao listar correções (e mantê-lo estável caso o gabarito seja editado no futuro).
-- **`Exam.classIds[]` (multi-turma)** – uma prova pode ser aplicada em mais de uma turma simultaneamente (ex.: 9ºA + 9ºB com mesmo gabarito).
+- **`Exam.classIds[]` (multi-turma)** – uma avaliação pode ser aplicada em mais de uma turma simultaneamente (ex.: 9ºA + 9ºB com mesmo gabarito).
 - **`Correction.studentId | null`** – correção pode existir sem aluno identificado (IA falhou em ler o nome ou rasura). Tela de revisão permite atribuir depois. `studentNameRaw` preserva o que a IA leu para ajudar a identificar.
 - **`identified: boolean` denormalizado** – facilita filtros e UI sem JOIN no AsyncStorage.
 
@@ -253,7 +253,7 @@ URI da foto local
              ▼
 ┌────────────────────────────────────────┐
 │ Validação:                             │
-│ - questionNumber existe na prova?      │
+│ - questionNumber existe na avaliação?      │
 │ - marked está em getOptionsForType()?  │
 │ - se inválido → '?'                    │
 └────────────┬───────────────────────────┘
@@ -295,7 +295,7 @@ Schema usado:
 ### Construção do prompt
 
 ```
-Você é um assistente de correção de provas escolares.
+Você é um assistente de correção de avaliações escolares.
 
 Para cada questão listada, identifique qual alternativa o aluno marcou.
 
@@ -378,7 +378,7 @@ export function calculateGrade(
 - **Arredondamento para 1 casa decimal** (padrão brasileiro: 7,5; 8,0; 9,3).
 - **`'?'` conta como erro** – decisão pedagógica: se o aluno não marcou ou a IA não detectou e o professor não corrigiu, é erro.
 - **Comparação case-insensitive** – evita bugs por capitalização.
-- **Divisor `|| 1`** – proteção contra divisão por zero (caso edge: prova sem questões ou com pesos zerados).
+- **Divisor `|| 1`** – proteção contra divisão por zero (caso edge: avaliação sem questões ou com pesos zerados).
 
 ---
 
@@ -390,13 +390,13 @@ export function calculateGrade(
 |---|---|---|
 | `@provafacil/classes` | `Class[]` | Todas as turmas cadastradas |
 | `@provafacil/students` | `Student[]` | Todos os alunos (com `classId`) |
-| `@provafacil/exams` | `Exam[]` | Todas as provas (com `classIds[]`) |
+| `@provafacil/exams` | `Exam[]` | Todas as avaliações (com `classIds[]`) |
 | `@provafacil/corrections` | `Correction[]` | Todas as correções (com `studentId` opcional) |
 | `@provafacil/migration_v2_done` | `'1' \| null` | Flag de migração v1→v2 (só roda uma vez) |
 
 ### Por que coleções flat e não índices por exam?
 
-Para o volume de dados esperado (até centenas de provas, milhares de correções por professor), filtrar em JS é trivial e simplifica o código:
+Para o volume de dados esperado (até centenas de avaliações, milhares de correções por professor), filtrar em JS é trivial e simplifica o código:
 
 ```typescript
 async listByExam(examId: string): Promise<Correction[]> {
@@ -412,15 +412,15 @@ Para Fase 3 com volumes maiores e queries complexas, migrar para SQLite.
 Ao excluir uma turma:
 1. Turma removida.
 2. Todos os alunos com `classId` apagados.
-3. `classIds[]` de cada prova filtrado; provas sem turma sobrando são apagadas.
-4. Correções dessas provas excluídas em cascata.
+3. `classIds[]` de cada avaliação filtrado; avaliações sem turma sobrando são apagadas.
+4. Correções dessas avaliações excluídas em cascata.
 
 Ao excluir um aluno:
 1. Aluno removido.
 2. Correções com `studentId` apontando para ele têm `studentId` setado para `null` e `identified: false` (a correção é preservada).
 
-Ao excluir uma prova:
-1. Prova removida.
+Ao excluir uma avaliação:
+1. Avaliação removida.
 2. Todas as correções dela apagadas.
 
 ### Migração v1 → v2
@@ -431,7 +431,7 @@ Versões anteriores tinham:
 
 Na primeira leitura após upgrade, `migrateIfNeeded()`:
 1. Detecta `Exam.className` ou `Exam.classId` legado e gera/reusa `Class` por nome.
-2. Detecta `Correction.studentName` e tenta match com aluno existente da turma (`findStudentByName` — fuzzy). Se não encontrar, cria um novo `Student` na turma da prova.
+2. Detecta `Correction.studentName` e tenta match com aluno existente da turma (`findStudentByName` — fuzzy). Se não encontrar, cria um novo `Student` na turma da avaliação.
 3. Reescreve as 4 coleções e marca `migration_v2_done = '1'`.
 
 A migração é idempotente e só roda uma vez. O código de leitura continua aceitando o formato legado (campo `className` opcional via `LegacyExam`) como fallback defensivo.
@@ -574,7 +574,7 @@ type RootStackParamList = {
 type TabParamList = {
   Home: undefined;
   TurmasTab: { openCreate?: boolean } | undefined;
-  ProvasTab: undefined;
+  AvaliacoesTab: undefined;
 };
 ```
 
@@ -585,7 +585,7 @@ RootStack (NativeStack)
 ├── MainTabs (BottomTab)
 │   ├── Home (HomeScreen)
 │   ├── TurmasTab (ClassesScreen)
-│   └── ProvasTab (ExamsScreen)
+│   └── AvaliacoesTab (ExamsScreen)
 ├── ClassDetail
 ├── CreateExam / EditExam
 ├── ExamDetail
@@ -601,11 +601,11 @@ HomeScreen
   ├─► QuickAction "Nova turma" ──► TurmasTab + openCreate:true
   │     (ClassesScreen abre dialog automaticamente, depois limpa o param)
   │
-  ├─► QuickAction "Nova prova" ──► CreateExam ──► (pop) Home
+  ├─► QuickAction "Nova avaliação" ──► CreateExam ──► (pop) Home
   │
-  └─► Provas recentes / "Ver todas" ──► ExamDetail ou ProvasTab
+  └─► Avaliações recentes / "Ver todas" ──► ExamDetail ou AvaliacoesTab
 
-ClassesScreen ──► ClassDetail (alunos + provas atribuídas)
+ClassesScreen ──► ClassDetail (alunos + avaliações atribuídas)
 
 ExamDetail
   ├─► Capture ──► Review ──► Result ──► (reset) [MainTabs, ExamDetail]
@@ -614,7 +614,7 @@ ExamDetail
 
 ### Composição de navegação no HomeScreen
 
-`HomeScreen` precisa navegar tanto para tabs irmãs (`TurmasTab`, `ProvasTab`) quanto para telas do RootStack (`CreateExam`, `ExamDetail`). Solução: `CompositeNavigationProp`.
+`HomeScreen` precisa navegar tanto para tabs irmãs (`TurmasTab`, `AvaliacoesTab`) quanto para telas do RootStack (`CreateExam`, `ExamDetail`). Solução: `CompositeNavigationProp`.
 
 ```typescript
 type Nav = CompositeNavigationProp<
@@ -627,7 +627,7 @@ Sem isso, `navigation.navigate('TurmasTab')` falharia em tipo (não existe no Ro
 
 ### Por que `CommonActions.reset` no fim?
 
-Após salvar uma correção, queremos voltar ao detalhe da prova **sem** o "back" voltar para Result/Review/Capture (que estariam stale). O `reset` substitui a stack inteira por `[MainTabs, ExamDetail]`.
+Após salvar uma correção, queremos voltar ao detalhe da avaliação **sem** o "back" voltar para Result/Review/Capture (que estariam stale). O `reset` substitui a stack inteira por `[MainTabs, ExamDetail]`.
 
 > ⚠️ O destino é `MainTabs`, não `Home`. `Home` é uma aba *dentro* de `MainTabs` — referenciá-lo direto no RootStack quebra com `NAVIGATE not handled by any navigator`.
 
@@ -666,7 +666,7 @@ Após salvar uma correção, queremos voltar ao detalhe da prova **sem** o "back
 | Quota do tier gratuito (15 RPM) | Em correção em lote, processamos em paralelo respeitando o burst; se houver throttle, errors aparecem por entrada e a tela de revisão preserva os bem-sucedidos |
 | Mudança de API do Gemini | URL e modelo configuráveis via env – atualizamos sem deploy |
 | IA lê nome errado / não lê | `findStudentByName` faz fuzzy match; quando não encontra, correção fica `identified: false` e pode ser atribuída manualmente na revisão |
-| Migração v1→v2 inferindo turma errada | A criação automática de `Class` usa o `className` literal da prova legacy. Professor pode renomear ou deletar/reorganizar manualmente |
+| Migração v1→v2 inferindo turma errada | A criação automática de `Class` usa o `className` literal da avaliação legacy. Professor pode renomear ou deletar/reorganizar manualmente |
 | Inconsistência entre `tailwind.config.js` e `src/theme.ts` | Convenção: alterar paleta sempre nos dois arquivos. Não há sync automático |
 
 ---

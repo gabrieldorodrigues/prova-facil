@@ -47,7 +47,7 @@ export type RootStackParamList = {
 export type TabParamList = {
   Home: undefined;
   TurmasTab: { openCreate?: boolean } | undefined;
-  ProvasTab: undefined;
+  AvaliacoesTab: undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -82,7 +82,7 @@ function MainTabs() {
         options={{
           title: 'Início',
           tabBarLabel: 'Início',
-          headerTitle: 'Prova Fácil',
+          headerTitle: 'Avaliação Fácil',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
@@ -101,12 +101,12 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="ProvasTab"
+        name="AvaliacoesTab"
         component={ExamsScreen}
         options={{
-          title: 'Provas',
-          tabBarLabel: 'Provas',
-          headerTitle: 'Provas',
+          title: 'Avaliações',
+          tabBarLabel: 'Avaliações',
+          headerTitle: 'Avaliações',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="document-text-outline" size={size} color={color} />
           ),
@@ -142,12 +142,12 @@ export function AppNavigator() {
         <RootStack.Screen
           name="CreateExam"
           component={CreateExamScreen}
-          options={{ title: 'Nova Prova' }}
+          options={{ title: 'Nova avaliação' }}
         />
         <RootStack.Screen
           name="EditExam"
           component={EditExamScreen}
-          options={{ title: 'Editar Prova' }}
+          options={{ title: 'Editar avaliação' }}
         />
         <RootStack.Screen
           name="ExamDetail"

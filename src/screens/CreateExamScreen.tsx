@@ -82,7 +82,7 @@ export function CreateExamScreen({ route, navigation }: Props) {
 
   const removeQuestion = (idx: number) => {
     if (questions.length === 1) {
-      toast('A prova precisa de pelo menos uma questão.', 'info', 2200);
+      toast('A avaliação precisa de pelo menos uma questão.', 'info', 2200);
       return;
     }
     setQuestions((prev) =>
@@ -122,7 +122,7 @@ export function CreateExamScreen({ route, navigation }: Props) {
   };
 
   const handleSave = async () => {
-    if (!name.trim()) return Alert.alert('Atenção', 'Informe o nome da prova.');
+    if (!name.trim()) return Alert.alert('Atenção', 'Informe o nome da avaliação.');
     if (classIds.length === 0)
       return Alert.alert('Atenção', 'Selecione pelo menos uma turma.');
     if (questions.length === 0)
@@ -154,10 +154,10 @@ export function CreateExamScreen({ route, navigation }: Props) {
       >
         <View className="bg-bg-surface rounded-2xl p-4">
           <Text className="text-[12px] font-bold text-ink-muted uppercase tracking-wider mb-3">
-            1. Informações da prova
+            1. Informações da avaliação
           </Text>
           <Input
-            label="Nome da prova"
+            label="Nome da avaliação"
             value={name}
             onChangeText={setName}
             placeholder="Ex.: Matemática 1º Bimestre"
@@ -272,7 +272,7 @@ export function CreateExamScreen({ route, navigation }: Props) {
           iconLeft={<Ionicons name="save-outline" size={18} color="#ffffff" />}
           style={{ marginTop: 24 }}
         >
-          Salvar prova
+          Salvar avaliação
         </Button>
       </ScrollView>
 

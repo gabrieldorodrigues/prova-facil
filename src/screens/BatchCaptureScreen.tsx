@@ -187,7 +187,7 @@ export function BatchCaptureScreen({ route, navigation }: Props) {
           <View style={styles.counterBox}>
             <Text style={styles.counterValue}>{photoUris.length}</Text>
             <Text style={styles.counterLabel}>
-              prova{photoUris.length === 1 ? '' : 's'} na fila
+              {photoUris.length === 1 ? 'avaliação na fila' : 'avaliações na fila'}
             </Text>
           </View>
         </View>
