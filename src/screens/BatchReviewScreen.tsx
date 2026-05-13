@@ -1,8 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
-import { CommonActions } from '@react-navigation/native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import * as Crypto from 'expo-crypto';
-import React, { useEffect, useMemo, useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { CommonActions } from "@react-navigation/native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import * as Crypto from "expo-crypto";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Image,
@@ -11,38 +11,40 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import { ScoreBadge } from '../components/ScoreBadge';
-import { Button } from '../components/ui/Button';
+} from "react-native";
+import { ScoreBadge } from "../components/ScoreBadge";
+import { Button } from "../components/ui/Button";
 import {
   Dialog,
   DialogActions,
+  DialogContent,
   DialogScrollArea,
   DialogTitle,
-} from '../components/ui/Dialog';
-import { IconButton } from '../components/ui/IconButton';
-import { Spinner } from '../components/ui/Spinner';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { detectBatch } from '../services/geminiVision';
+} from "../components/ui/Dialog";
+import { IconButton } from "../components/ui/IconButton";
+import { Input } from "../components/ui/Input";
+import { Spinner } from "../components/ui/Spinner";
+import { RootStackParamList } from "../navigation/AppNavigator";
+import { detectBatch } from "../services/geminiVision";
 import {
   classStorage,
   correctionStorage,
   examStorage,
   findStudentByName,
   studentStorage,
-} from '../services/storage';
-import { Class, Correction, Exam, Student } from '../types';
-import { colors, elevation, radius, spacing } from '../theme';
-import { calculateGrade } from '../utils/grading';
+} from "../services/storage";
+import { Class, Correction, Exam, Student } from "../types";
+import { colors, elevation, radius, spacing } from "../theme";
+import { calculateGrade } from "../utils/grading";
 
-type Props = NativeStackScreenProps<RootStackParamList, 'BatchReview'>;
+type Props = NativeStackScreenProps<RootStackParamList, "BatchReview">;
 
 interface BatchEntry {
   id: string;
   photoUri: string;
   studentId: string | null;
   studentNameRaw: string | null;
-  confidence: 'high' | 'medium' | 'low' | 'none';
+  confidence: "high" | "medium" | "low" | "none";
   detectedAnswers: Record<string, string>;
   error: string | null;
 }
@@ -53,10 +55,15 @@ export function BatchReviewScreen({ route, navigation }: Props) {
   const [cls, setCls] = useState<Class | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [entries, setEntries] = useState<BatchEntry[]>([]);
-  const [progress, setProgress] = useState({ done: 0, total: photoUris.length });
+  const [progress, setProgress] = useState({
+    done: 0,
+    total: photoUris.length,
+  });
   const [loading, setLoading] = useState(true);
   const [pickingFor, setPickingFor] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showAddStudent, setShowAddStudent] = useState(false);
+  const [newStudentName, setNewStudentName] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -86,13 +93,15 @@ export function BatchReviewScreen({ route, navigation }: Props) {
             photoUri: r.photoUri,
             studentId: null,
             studentNameRaw: null,
-            confidence: 'none',
-            detectedAnswers: Object.fromEntries(e.questions.map((q) => [q.id, '?'])),
+            confidence: "none",
+            detectedAnswers: Object.fromEntries(
+              e.questions.map((q) => [q.id, "?"]),
+            ),
             error: r.error,
           };
         }
         const matched =
-          r.result.studentName && r.result.studentNameConfidence !== 'none'
+          r.result.studentName && r.result.studentNameConfidence !== "none"
             ? findStudentByName(r.result.studentName, sts)
             : null;
         return {
@@ -121,7 +130,9 @@ export function BatchReviewScreen({ route, navigation }: Props) {
   }, [entries]);
 
   const updateEntry = (id: string, patch: Partial<BatchEntry>) =>
-    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+    setEntries((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+    );
 
   const removeEntry = (id: string) =>
     setEntries((prev) => prev.filter((e) => e.id !== id));
@@ -134,14 +145,31 @@ export function BatchReviewScreen({ route, navigation }: Props) {
     setPickingFor(null);
   };
 
+  const handleAddStudent = async () => {
+    const name = newStudentName.trim();
+    if (!name || !classId) return;
+    const student: Student = {
+      id: Crypto.randomUUID(),
+      classId,
+      name,
+      createdAt: new Date().toISOString(),
+    };
+    await studentStorage.save(student);
+    setStudents((prev) =>
+      [...prev, student].sort((a, b) => a.name.localeCompare(b.name)),
+    );
+    setNewStudentName("");
+    setShowAddStudent(false);
+  };
+
   const editAnswers = (entryId: string) => {
     if (!exam) return;
     const entry = entries.find((e) => e.id === entryId);
     if (!entry) return;
     const studentName = entry.studentId
-      ? students.find((s) => s.id === entry.studentId)?.name || 'Aluno'
-      : entry.studentNameRaw || 'Aluno não identificado';
-    navigation.navigate('Result', {
+      ? students.find((s) => s.id === entry.studentId)?.name || "Aluno"
+      : entry.studentNameRaw || "Aluno não identificado";
+    navigation.navigate("Result", {
       examId,
       studentName,
       photoUris: [entry.photoUri],
@@ -154,11 +182,11 @@ export function BatchReviewScreen({ route, navigation }: Props) {
     const unidentified = entries.filter((e) => !e.studentId);
     if (unidentified.length > 0) {
       Alert.alert(
-        'Algumas provas sem aluno',
+        "Algumas provas sem aluno",
         `${unidentified.length} prova(s) ainda estão sem aluno selecionado. Deseja salvar mesmo assim?`,
         [
-          { text: 'Cancelar', style: 'cancel' },
-          { text: 'Salvar tudo', onPress: () => doSave() },
+          { text: "Cancelar", style: "cancel" },
+          { text: "Salvar tudo", onPress: () => doSave() },
         ],
       );
       return;
@@ -190,11 +218,14 @@ export function BatchReviewScreen({ route, navigation }: Props) {
       navigation.dispatch(
         CommonActions.reset({
           index: 1,
-          routes: [{ name: 'MainTabs' }, { name: 'ExamDetail', params: { examId } }],
+          routes: [
+            { name: "MainTabs" },
+            { name: "ExamDetail", params: { examId } },
+          ],
         }),
       );
     } catch (err) {
-      Alert.alert('Erro', `Não foi possível salvar: ${err}`);
+      Alert.alert("Erro", `Não foi possível salvar: ${err}`);
       setSaving(false);
     }
   };
@@ -221,28 +252,42 @@ export function BatchReviewScreen({ route, navigation }: Props) {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140 }}>
+      <ScrollView
+        contentContainerStyle={{ padding: spacing.lg, paddingBottom: 140 }}
+      >
         <View style={[styles.summaryCard, elevation.sm]}>
           <Text style={styles.summaryTitle}>
             {summary.total} prova(s) processada(s)
           </Text>
           <View style={styles.summaryStats}>
             <View style={styles.summaryStat}>
-              <View style={[styles.summaryDot, { backgroundColor: colors.accent }]} />
+              <View
+                style={[styles.summaryDot, { backgroundColor: colors.accent }]}
+              />
               <Text style={styles.summaryText}>
                 {summary.identified} identificada(s)
               </Text>
             </View>
             <View style={styles.summaryStat}>
-              <View style={[styles.summaryDot, { backgroundColor: colors.warning }]} />
+              <View
+                style={[styles.summaryDot, { backgroundColor: colors.warning }]}
+              />
               <Text style={styles.summaryText}>
-                {summary.total - summary.identified - summary.failed} para revisar
+                {summary.total - summary.identified - summary.failed} para
+                revisar
               </Text>
             </View>
             {summary.failed > 0 ? (
               <View style={styles.summaryStat}>
-                <View style={[styles.summaryDot, { backgroundColor: colors.danger }]} />
-                <Text style={styles.summaryText}>{summary.failed} com erro</Text>
+                <View
+                  style={[
+                    styles.summaryDot,
+                    { backgroundColor: colors.danger },
+                  ]}
+                />
+                <Text style={styles.summaryText}>
+                  {summary.failed} com erro
+                </Text>
               </View>
             ) : null}
           </View>
@@ -263,19 +308,26 @@ export function BatchReviewScreen({ route, navigation }: Props) {
               ]}
             >
               <View style={styles.entryRow}>
-                <Image source={{ uri: entry.photoUri }} style={styles.entryPhoto} />
+                <Image
+                  source={{ uri: entry.photoUri }}
+                  style={styles.entryPhoto}
+                />
 
                 <View style={{ flex: 1, gap: 4 }}>
                   {entry.error ? (
                     <View style={styles.errorChip}>
-                      <Text style={styles.errorChipText}>⚠ Erro: {entry.error}</Text>
+                      <Text style={styles.errorChipText}>
+                        ⚠ Erro: {entry.error}
+                      </Text>
                     </View>
                   ) : null}
 
                   {matchedStudent ? (
                     <>
-                      <Text style={styles.entryName}>{matchedStudent.name}</Text>
-                      {entry.confidence !== 'high' && entry.studentNameRaw ? (
+                      <Text style={styles.entryName}>
+                        {matchedStudent.name}
+                      </Text>
+                      {entry.confidence !== "high" && entry.studentNameRaw ? (
                         <Text style={styles.entryHint}>
                           IA leu: "{entry.studentNameRaw}" ({entry.confidence})
                         </Text>
@@ -299,7 +351,7 @@ export function BatchReviewScreen({ route, navigation }: Props) {
                   )}
                 </View>
 
-                <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                <View style={{ alignItems: "flex-end", gap: 6 }}>
                   <ScoreBadge score={grade.score} size="sm" />
                   <IconButton
                     icon="close"
@@ -313,19 +365,25 @@ export function BatchReviewScreen({ route, navigation }: Props) {
 
               <View style={styles.entryFooter}>
                 <Button
-                  variant={matchedStudent ? 'ghost' : 'tonal'}
+                  variant={matchedStudent ? "ghost" : "tonal"}
                   size="sm"
                   style={{ flex: 1 }}
                   iconLeft={
                     <Ionicons
-                      name={matchedStudent ? 'swap-horizontal' : 'person-add-outline'}
+                      name={
+                        matchedStudent
+                          ? "swap-horizontal"
+                          : "person-add-outline"
+                      }
                       size={16}
-                      color={matchedStudent ? colors.primary : colors.primaryDark}
+                      color={
+                        matchedStudent ? colors.primary : colors.primaryDark
+                      }
                     />
                   }
                   onPress={() => pickStudent(entry.id)}
                 >
-                  {matchedStudent ? 'Trocar aluno' : 'Selecionar aluno'}
+                  {matchedStudent ? "Trocar aluno" : "Selecionar aluno"}
                 </Button>
                 <Button
                   variant="ghost"
@@ -360,7 +418,9 @@ export function BatchReviewScreen({ route, navigation }: Props) {
         </Button>
         <View style={{ width: spacing.sm }} />
         <Button
-          iconLeft={<Ionicons name="checkmark-done" size={18} color="#ffffff" />}
+          iconLeft={
+            <Ionicons name="checkmark-done" size={18} color="#ffffff" />
+          }
           style={{ flex: 2 }}
           onPress={handleSaveAll}
           loading={saving}
@@ -370,9 +430,12 @@ export function BatchReviewScreen({ route, navigation }: Props) {
         </Button>
       </View>
 
-      <Dialog open={!!pickingFor} onOpenChange={(o) => !o && setPickingFor(null)}>
+      <Dialog
+        open={!!pickingFor}
+        onOpenChange={(o) => !o && setPickingFor(null)}
+      >
         <DialogTitle>
-          {cls ? `Selecionar aluno • ${cls.name}` : 'Selecionar aluno'}
+          {cls ? `Selecionar aluno • ${cls.name}` : "Selecionar aluno"}
         </DialogTitle>
         <DialogScrollArea>
           {students.length === 0 ? (
@@ -413,10 +476,49 @@ export function BatchReviewScreen({ route, navigation }: Props) {
               );
             })
           )}
+          <Pressable
+            onPress={() => {
+              setPickingFor(null);
+              setShowAddStudent(true);
+            }}
+            className="flex-row items-center py-3 px-5 gap-3 active:bg-brand-50 border-t border-line"
+          >
+            <View className="w-9 h-9 rounded-full bg-brand-50 items-center justify-center">
+              <Text className="text-brand-700 font-bold text-[18px]">＋</Text>
+            </View>
+            <Text className="flex-1 text-[15px] font-semibold text-brand-500">
+              Adicionar aluno
+            </Text>
+          </Pressable>
         </DialogScrollArea>
         <DialogActions>
           <Button variant="ghost" onPress={() => setPickingFor(null)}>
             Cancelar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={showAddStudent}
+        onOpenChange={(o) => !o && setShowAddStudent(false)}
+      >
+        <DialogTitle>Novo aluno</DialogTitle>
+        <DialogContent>
+          <Input
+            label="Nome do aluno"
+            value={newStudentName}
+            onChangeText={setNewStudentName}
+            placeholder="Ex.: João Silva"
+            autoFocus
+            autoCapitalize="words"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button variant="ghost" onPress={() => setShowAddStudent(false)}>
+            Cancelar
+          </Button>
+          <Button onPress={handleAddStudent} disabled={!newStudentName.trim()}>
+            Adicionar
           </Button>
         </DialogActions>
       </Dialog>
@@ -428,26 +530,26 @@ const styles = StyleSheet.create({
   loadingScreen: {
     flex: 1,
     backgroundColor: colors.bg,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: spacing.xxl,
   },
   loadingTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.textPrimary,
     marginTop: spacing.lg,
   },
   loadingHint: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
   progressBar: {
-    width: '80%',
+    width: "80%",
     height: 8,
     backgroundColor: colors.surfaceMuted,
     borderRadius: 999,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginTop: spacing.lg,
   },
-  progressFill: { height: '100%', backgroundColor: colors.primary },
+  progressFill: { height: "100%", backgroundColor: colors.primary },
 
   summaryCard: {
     backgroundColor: colors.surface,
@@ -456,9 +558,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  summaryTitle: { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
-  summaryStats: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.sm },
-  summaryStat: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  summaryTitle: { fontSize: 18, fontWeight: "700", color: colors.textPrimary },
+  summaryStats: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.md,
+    marginTop: spacing.sm,
+  },
+  summaryStat: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   summaryDot: { width: 8, height: 8, borderRadius: 999 },
   summaryText: { fontSize: 13, color: colors.textSecondary },
 
@@ -469,24 +576,29 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   entryCardWarning: {
     borderColor: colors.warning,
-    backgroundColor: '#fffbeb',
+    backgroundColor: "#fffbeb",
   },
-  entryRow: { flexDirection: 'row', gap: spacing.md, paddingHorizontal: spacing.md, paddingBottom: spacing.md },
+  entryRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+  },
   entryPhoto: {
     width: 64,
     height: 80,
     borderRadius: radius.md,
     backgroundColor: colors.surfaceMuted,
   },
-  entryName: { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
+  entryName: { fontSize: 15, fontWeight: "700", color: colors.textPrimary },
   entryUnidentified: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#92400e',
+    fontWeight: "700",
+    color: "#92400e",
   },
   entryHint: { fontSize: 12, color: colors.textMuted },
   errorChip: {
@@ -494,12 +606,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: radius.sm,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
-  errorChipText: { color: colors.danger, fontSize: 11, fontWeight: '600' },
+  errorChipText: { color: colors.danger, fontSize: 11, fontWeight: "600" },
 
   entryFooter: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
@@ -509,16 +621,16 @@ const styles = StyleSheet.create({
   },
 
   bottomBar: {
-    position: 'absolute',
+    position: "absolute",
     left: spacing.lg,
     right: spacing.lg,
     bottom: spacing.lg,
-    flexDirection: 'row',
+    flexDirection: "row",
   },
 
   studentPickRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
@@ -528,10 +640,10 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 999,
     backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  smallAvatarText: { color: colors.primaryDark, fontWeight: '700' },
+  smallAvatarText: { color: colors.primaryDark, fontWeight: "700" },
   studentPickName: { flex: 1, fontSize: 15, color: colors.textPrimary },
   usedTag: {
     fontSize: 10,
