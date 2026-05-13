@@ -26,15 +26,30 @@ function extensionFromMime(mimeType: string | undefined | null): string {
   if (m.includes('png')) return 'png';
   if (m.includes('webp')) return 'webp';
   if (m.includes('jpeg') || m.includes('jpg')) return 'jpg';
+  if (m.includes('heic') || m.includes('heif')) return 'heic';
   return 'jpg';
+}
+
+/** Extensão útil para o manipulator, a partir do path ou do MIME. */
+function extensionFromUriOrMime(uri: string, mimeType: string | undefined | null): string {
+  const match = uri.match(/\.([a-zA-Z0-9]+)(?:\?|#|$)/);
+  if (match) {
+    const ext = match[1].toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'].includes(ext)) {
+      return ext === 'jpeg' ? 'jpg' : ext;
+    }
+  }
+  return extensionFromMime(mimeType);
 }
 
 /**
  * Garante um URI que o `ImageManipulator` consegue abrir de forma fiável.
  *
- * - Se o picker já devolveu `file://` (caso típico na galeria Android), **reutiliza esse URI**.
- * - Só grava a partir de `base64` quando o URI ainda é problemático (`content://`, `ph://`, …)
- *   ou, com `preferBase64`, quando não há caminho local utilizável (ex.: `blob:` na web).
+ * - **iOS + galeria (`preferBase64`)**: copia o ficheiro já exportado pelo picker para a cache
+ *   do `expo-file-system`. No Expo Go o ficheiro fica em `…/ImagePicker/` e o manipulator
+ *   por vezes falha a ler esse path embora o `Image` no preview funcione.
+ * - **Android + galeria**: reutiliza o `file://` que o picker já gravou (evita regravação `.bin`).
+ * - Grava a partir de `base64` só quando o URI ainda é problemático ou não há `file:` (ex.: web).
  */
 export async function materializePickerAsset(
   asset: ImagePickerAsset,
@@ -43,6 +58,26 @@ export async function materializePickerAsset(
   const { preferBase64 = false } = opts;
   const { uri, base64 } = asset;
   if (!FileSystem.cacheDirectory) return uri;
+
+  if (
+    preferBase64 &&
+    Platform.OS === 'ios' &&
+    hasResolvableLocalFilePath(uri)
+  ) {
+    const ext = extensionFromUriOrMime(uri, asset.mimeType);
+    const out = `${FileSystem.cacheDirectory}pf-ios-pick-${Date.now()}-${Math.random().toString(36).slice(2, 11)}.${ext}`;
+    try {
+      await FileSystem.copyAsync({ from: uri, to: out });
+      return out;
+    } catch {
+      if (base64) {
+        await FileSystem.writeAsStringAsync(out, base64, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        return out;
+      }
+    }
+  }
 
   const shouldWriteBase64 =
     !!base64 &&
