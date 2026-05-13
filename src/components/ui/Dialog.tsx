@@ -7,6 +7,7 @@ import {
   ScrollView,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 
 import { cn } from "../../lib/utils";
@@ -35,6 +36,7 @@ export function Dialog({
   contentClasses,
 }: DialogProps) {
   const isOpen = open ?? visible ?? false;
+  const { height } = useWindowDimensions();
   const close = () => {
     onOpenChange?.(false);
     onDismiss?.();
@@ -50,23 +52,22 @@ export function Dialog({
     >
       <DialogContext.Provider value={{ close }}>
         <Pressable
-          className="flex-1 bg-black/50 justify-center"
+          className="justify-center flex-1 bg-black/50"
           onPress={close}
-          keyboardShouldPersistTaps="handled"
         >
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : undefined}
+            style={{ justifyContent: "center" }}
           >
-            <Pressable
-              onPress={() => {}}
-              style={{ maxHeight: "85%" }}
+            <View
+              style={{ maxHeight: height * 0.85 }}
               className={cn(
-                "mx-6 bg-bg-surface rounded-2xl overflow-hidden",
+                "mx-6 bg-bg-surface rounded-2xl overflow-hidden flex flex-col",
                 contentClasses,
               )}
             >
               {children}
-            </Pressable>
+            </View>
           </KeyboardAvoidingView>
         </Pressable>
       </DialogContext.Provider>
@@ -81,7 +82,10 @@ export function DialogTitle({
 }: React.ComponentPropsWithoutRef<typeof Text>) {
   return (
     <Text
-      className={cn("text-[18px] font-bold text-ink px-5 pt-5 pb-2", className)}
+      className={cn(
+        "text-[18px] font-bold text-ink px-5 pt-5 pb-2 flex-shrink-0",
+        className,
+      )}
       {...props}
     >
       {children}
@@ -93,7 +97,9 @@ export function DialogContent({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<typeof View>) {
-  return <View className={cn("px-5 pb-2", className)} {...props} />;
+  return (
+    <View className={cn("px-5 py-2 flex-shrink-0", className)} {...props} />
+  );
 }
 
 interface DialogScrollAreaProps extends React.ComponentPropsWithoutRef<
@@ -111,10 +117,11 @@ export function DialogScrollArea({
 }: DialogScrollAreaProps) {
   return (
     <ScrollView
-      style={[{ flexShrink: 1 }, style]}
+      style={[{ flex: 1 }, style]}
       className={className}
       contentContainerStyle={contentContainerStyle}
       keyboardShouldPersistTaps="handled"
+      scrollEnabled={true}
       {...props}
     >
       {children}
@@ -129,7 +136,7 @@ export function DialogActions({
   return (
     <View
       className={cn(
-        "flex-row justify-end items-center gap-2 px-3 py-3",
+        "flex-row justify-end items-center gap-2 px-3 py-3 flex-shrink-0 border-t border-line",
         className,
       )}
       {...props}
