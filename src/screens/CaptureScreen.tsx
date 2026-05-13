@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Crypto from 'expo-crypto';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -28,6 +29,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { classStorage, examStorage, studentStorage } from '../services/storage';
 import { Class, Student } from '../types';
 import { colors, radius, spacing } from '../theme';
+import { materializePickerAsset } from '../utils/materializePickerAsset';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Capture'>;
 
@@ -42,27 +44,36 @@ export function CaptureScreen({ route, navigation }: Props) {
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentClassId, setNewStudentClassId] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      const exam = await examStorage.get(examId);
-      if (!exam) {
-        navigation.goBack();
-        return;
+  const loadExamStudents = useCallback(async () => {
+    const exam = await examStorage.get(examId);
+    if (!exam) {
+      navigation.goBack();
+      return;
+    }
+    const cls: Class[] = [];
+    const sts: Student[] = [];
+    for (const cid of exam.classIds) {
+      const c = await classStorage.get(cid);
+      if (c) {
+        cls.push(c);
+        sts.push(...(await studentStorage.listByClass(cid)));
       }
-      const cls: Class[] = [];
-      const sts: Student[] = [];
-      for (const cid of exam.classIds) {
-        const c = await classStorage.get(cid);
-        if (c) {
-          cls.push(c);
-          sts.push(...(await studentStorage.listByClass(cid)));
-        }
-      }
-      setClasses(cls);
-      setStudents(sts);
-      if (cls.length === 1) setNewStudentClassId(cls[0].id);
-    })();
+    }
+    sts.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+    setClasses(cls);
+    setStudents(sts);
+    setSelectedId((prev) => {
+      if (!prev) return null;
+      return sts.some((s) => s.id === prev) ? prev : null;
+    });
+    if (cls.length === 1) setNewStudentClassId(cls[0].id);
   }, [examId, navigation]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadExamStudents();
+    }, [loadExamStudents]),
+  );
 
   const classMap = useMemo(
     () => new Map(classes.map((c) => [c.id, c])),
@@ -101,9 +112,11 @@ export function CaptureScreen({ route, navigation }: Props) {
       mediaTypes: ['images'],
       quality: 0.8,
       allowsEditing: false,
+      base64: true,
     });
     if (!result.canceled && result.assets[0]) {
-      setPhotoUris((p) => [...p, result.assets[0].uri]);
+      const uri = await materializePickerAsset(result.assets[0], { preferBase64: false });
+      setPhotoUris((p) => [...p, uri]);
     }
   };
 
@@ -117,9 +130,17 @@ export function CaptureScreen({ route, navigation }: Props) {
       mediaTypes: ['images'],
       allowsMultipleSelection: true,
       quality: 0.8,
+      base64: true,
+      ...(Platform.OS === 'ios' && {
+        preferredAssetRepresentationMode:
+          ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
+      }),
     });
     if (!result.canceled) {
-      setPhotoUris((p) => [...p, ...result.assets.map((a) => a.uri)]);
+      const uris = await Promise.all(
+        result.assets.map((a) => materializePickerAsset(a, { preferBase64: true })),
+      );
+      setPhotoUris((p) => [...p, ...uris]);
     }
   };
 
@@ -168,6 +189,11 @@ export function CaptureScreen({ route, navigation }: Props) {
     setShowAddStudent(true);
   };
 
+  const openStudentPicker = useCallback(async () => {
+    await loadExamStudents();
+    setShowStudentPicker(true);
+  }, [loadExamStudents]);
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.bg }}
@@ -208,7 +234,7 @@ export function CaptureScreen({ route, navigation }: Props) {
                   iconLeft={
                     <Ionicons name="swap-horizontal" size={16} color={colors.primaryDark} />
                   }
-                  onPress={() => setShowStudentPicker(true)}
+                  onPress={() => void openStudentPicker()}
                 >
                   Trocar
                 </Button>
@@ -232,7 +258,7 @@ export function CaptureScreen({ route, navigation }: Props) {
                 iconLeft={
                   <Ionicons name="list-outline" size={18} color={colors.primaryDark} />
                 }
-                onPress={() => setShowStudentPicker(true)}
+                onPress={() => void openStudentPicker()}
               >
                 Escolher aluno na lista
               </Button>

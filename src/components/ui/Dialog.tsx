@@ -115,9 +115,13 @@ export function DialogScrollArea({
   style,
   ...props
 }: DialogScrollAreaProps) {
+  const { height } = useWindowDimensions();
+  // Avoid flex:1 here: inside a maxHeight-only column the ScrollView often gets 0 height on RN,
+  // so list content (e.g. student picker) appears empty.
+  const scrollMax = Math.min(Math.round(height * 0.58), 520);
   return (
     <ScrollView
-      style={[{ flex: 1 }, style]}
+      style={[{ maxHeight: scrollMax }, style]}
       className={className}
       contentContainerStyle={contentContainerStyle}
       keyboardShouldPersistTaps="handled"

@@ -1,5 +1,6 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import * as ImageManipulator from 'expo-image-manipulator';
+import { Platform } from 'react-native';
 import { Exam } from '../types';
 import { getOptionsForType } from '../utils/grading';
 
@@ -31,20 +32,44 @@ export interface BatchDetectionItem {
   error: string | null;
 }
 
+function uriNeedsLocalCopyForProcessing(uri: string): boolean {
+  const u = uri.toLowerCase();
+  if (Platform.OS === 'android' && u.startsWith('content://')) return true;
+  if (Platform.OS === 'ios' && u.startsWith('ph://')) return true;
+  return false;
+}
+
+/** Gallery / file-manager picks often use content:// on Android; native image code may not read them reliably. */
+async function ensureLocalReadableImageUri(uri: string): Promise<{ uri: string; tempCopy: string | null }> {
+  if (!uriNeedsLocalCopyForProcessing(uri) || !FileSystem.cacheDirectory) {
+    return { uri, tempCopy: null };
+  }
+  const tempCopy = `${FileSystem.cacheDirectory}pf-vision-src-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+  await FileSystem.copyAsync({ from: uri, to: tempCopy });
+  return { uri: tempCopy, tempCopy };
+}
+
 async function compressAndEncode(uri: string): Promise<string> {
-  const result = await ImageManipulator.manipulateAsync(
-    uri,
-    [{ resize: { width: 1024 } }],
-    {
-      compress: 0.7,
-      format: ImageManipulator.SaveFormat.JPEG,
-      base64: true,
-    },
-  );
-  if (result.base64) return result.base64;
-  return await FileSystem.readAsStringAsync(result.uri, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
+  const { uri: sourceUri, tempCopy } = await ensureLocalReadableImageUri(uri);
+  try {
+    const result = await ImageManipulator.manipulateAsync(
+      sourceUri,
+      [{ resize: { width: 1024 } }],
+      {
+        compress: 0.7,
+        format: ImageManipulator.SaveFormat.JPEG,
+        base64: true,
+      },
+    );
+    if (result.base64) return result.base64;
+    return await FileSystem.readAsStringAsync(result.uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+  } finally {
+    if (tempCopy) {
+      await FileSystem.deleteAsync(tempCopy, { idempotent: true }).catch(() => {});
+    }
+  }
 }
 
 function buildPrompt(exam: Exam, withName: boolean): string {
@@ -172,7 +197,15 @@ async function callGemini(
   for (const q of exam.questions) answers[q.id] = '?';
 
   for (const ans of parsed.answers || []) {
-    const q = exam.questions.find((qq) => qq.number === ans.questionNumber);
+    const raw = (ans as { questionNumber?: unknown }).questionNumber;
+    const num =
+      typeof raw === 'number' && Number.isFinite(raw)
+        ? Math.trunc(raw)
+        : typeof raw === 'string'
+          ? parseInt(raw.trim(), 10)
+          : NaN;
+    if (!Number.isFinite(num)) continue;
+    const q = exam.questions.find((qq) => qq.number === num);
     if (!q) continue;
     const valid = getOptionsForType(q.type);
     const marked = String(ans.marked || '?').toUpperCase().trim();

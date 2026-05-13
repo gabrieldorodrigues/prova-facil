@@ -1,6 +1,7 @@
+import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as Crypto from "expo-crypto";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
@@ -102,6 +103,34 @@ export function ReviewScreen({ route, navigation }: Props) {
       cancelled = true;
     };
   }, [examId, photoUris, navigation]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      (async () => {
+        const e = await examStorage.get(examId);
+        if (!e || cancelled) return;
+        const cls: Class[] = [];
+        for (const cid of e.classIds) {
+          const c = await classStorage.get(cid);
+          if (c) cls.push(c);
+        }
+        const allStudents: Student[] = [];
+        for (const classId of e.classIds) {
+          const sts = await studentStorage.listByClass(classId);
+          allStudents.push(...sts);
+        }
+        if (cancelled) return;
+        allStudents.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+        setClasses(cls);
+        setStudents(allStudents);
+        if (cls.length === 1) setNewStudentClassId(cls[0].id);
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [examId]),
+  );
 
   const stats = useMemo(() => {
     if (!exam) return { detected: 0, total: 0 };

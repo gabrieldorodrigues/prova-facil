@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { CommonActions } from "@react-navigation/native";
+import { CommonActions, useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as Crypto from "expo-crypto";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Image,
@@ -122,6 +122,21 @@ export function BatchReviewScreen({ route, navigation }: Props) {
       cancelled = true;
     };
   }, [examId, photoUris, navigation]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!classId) return;
+      let cancelled = false;
+      (async () => {
+        const sts = await studentStorage.listByClass(classId);
+        if (cancelled) return;
+        setStudents(sts);
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [classId]),
+  );
 
   const summary = useMemo(() => {
     const identified = entries.filter((e) => e.studentId).length;

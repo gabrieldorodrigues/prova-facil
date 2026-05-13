@@ -6,6 +6,7 @@ import {
   Alert,
   FlatList,
   Image,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -23,6 +24,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { classStorage, examStorage } from '../services/storage';
 import { Class } from '../types';
 import { colors, radius, spacing } from '../theme';
+import { materializePickerAsset } from '../utils/materializePickerAsset';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BatchCapture'>;
 
@@ -64,9 +66,11 @@ export function BatchCaptureScreen({ route, navigation }: Props) {
       mediaTypes: ['images'],
       quality: 0.8,
       allowsEditing: false,
+      base64: true,
     });
     if (!result.canceled && result.assets[0]) {
-      setPhotoUris((p) => [...p, result.assets[0].uri]);
+      const uri = await materializePickerAsset(result.assets[0], { preferBase64: false });
+      setPhotoUris((p) => [...p, uri]);
     }
   };
 
@@ -81,9 +85,17 @@ export function BatchCaptureScreen({ route, navigation }: Props) {
       allowsMultipleSelection: true,
       selectionLimit: 30,
       quality: 0.8,
+      base64: true,
+      ...(Platform.OS === 'ios' && {
+        preferredAssetRepresentationMode:
+          ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
+      }),
     });
     if (!result.canceled) {
-      setPhotoUris((p) => [...p, ...result.assets.map((a) => a.uri)]);
+      const uris = await Promise.all(
+        result.assets.map((a) => materializePickerAsset(a, { preferBase64: true })),
+      );
+      setPhotoUris((p) => [...p, ...uris]);
     }
   };
 
