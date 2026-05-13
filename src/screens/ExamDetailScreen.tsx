@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { AnswerCell } from '../components/AnswerCell';
 import { EmptyState } from '../components/EmptyState';
 import { ScoreBadge } from '../components/ScoreBadge';
@@ -45,6 +45,9 @@ export function ExamDetailScreen({ route, navigation }: Props) {
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [corrections, setCorrections] = useState<Correction[]>([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [actionCorrection, setActionCorrection] = useState<Correction | null>(null);
+  const [confirmDeleteCorrection, setConfirmDeleteCorrection] =
+    useState<Correction | null>(null);
   const { toast } = useToast();
 
   const load = useCallback(async () => {
@@ -134,6 +137,36 @@ export function ExamDetailScreen({ route, navigation }: Props) {
     await examStorage.remove(examId);
     navigation.goBack();
   };
+
+  const handleEditCorrection = (c: Correction) => {
+    setActionCorrection(null);
+    const st = c.studentId ? studentMap.get(c.studentId) : null;
+    const displayName = st?.name ?? c.studentNameRaw ?? 'Aluno';
+    navigation.navigate('Review', {
+      examId,
+      studentId: c.studentId ?? undefined,
+      studentName: displayName,
+      photoUris: c.photoUris,
+      correctionId: c.id,
+    });
+  };
+
+  const handleDeleteCorrection = async () => {
+    const target = confirmDeleteCorrection;
+    if (!target) return;
+    setConfirmDeleteCorrection(null);
+    await correctionStorage.remove(target.id);
+    setCorrections((prev) => prev.filter((c) => c.id !== target.id));
+    toast('Correção excluída.', 'success', 2400);
+  };
+
+  const actionStudentName = (() => {
+    if (!actionCorrection) return '';
+    const st = actionCorrection.studentId
+      ? studentMap.get(actionCorrection.studentId)
+      : null;
+    return st?.name ?? actionCorrection.studentNameRaw ?? 'Aluno';
+  })();
 
   return (
     <View className="flex-1 bg-bg">
@@ -290,10 +323,14 @@ export function ExamDetailScreen({ route, navigation }: Props) {
                 key={g.cls.id}
                 group={g}
                 studentMap={studentMap}
+                onCorrectionPress={setActionCorrection}
               />
             ))}
             {orphanCorrections.length > 0 ? (
-              <OrphanGroup corrections={orphanCorrections} />
+              <OrphanGroup
+                corrections={orphanCorrections}
+                onCorrectionPress={setActionCorrection}
+              />
             ) : null}
           </>
         )}
@@ -316,6 +353,87 @@ export function ExamDetailScreen({ route, navigation }: Props) {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog
+        open={!!actionCorrection}
+        onOpenChange={(o) => !o && setActionCorrection(null)}
+      >
+        <DialogTitle>{actionStudentName}</DialogTitle>
+        <DialogContent>
+          <Text className="text-[13px] text-ink-muted">
+            O que deseja fazer com esta correção?
+          </Text>
+        </DialogContent>
+        <View className="border-t border-line">
+          <Pressable
+            onPress={() => actionCorrection && handleEditCorrection(actionCorrection)}
+            className="flex-row items-center py-3 px-5 gap-3 active:bg-brand-50"
+          >
+            <View className="w-9 h-9 rounded-full bg-brand-50 items-center justify-center">
+              <Ionicons name="create-outline" size={20} color={colors.primary} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-[15px] font-semibold text-ink">
+                Editar correção
+              </Text>
+              <Text className="text-[12px] text-ink-subtle">
+                Ajustar respostas e aluno
+              </Text>
+            </View>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              const target = actionCorrection;
+              setActionCorrection(null);
+              if (target) setConfirmDeleteCorrection(target);
+            }}
+            className="flex-row items-center py-3 px-5 gap-3 active:bg-red-50 border-t border-line"
+          >
+            <View
+              className="w-9 h-9 rounded-full items-center justify-center"
+              style={{ backgroundColor: colors.dangerLight }}
+            >
+              <Ionicons name="trash-outline" size={20} color={colors.danger} />
+            </View>
+            <View className="flex-1">
+              <Text
+                className="text-[15px] font-semibold"
+                style={{ color: colors.danger }}
+              >
+                Excluir correção
+              </Text>
+              <Text className="text-[12px] text-ink-subtle">
+                Remove permanentemente esta prova corrigida
+              </Text>
+            </View>
+          </Pressable>
+        </View>
+        <DialogActions>
+          <Button variant="ghost" onPress={() => setActionCorrection(null)}>
+            Fechar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={!!confirmDeleteCorrection}
+        onOpenChange={(o) => !o && setConfirmDeleteCorrection(null)}
+      >
+        <DialogTitle>Excluir correção?</DialogTitle>
+        <DialogContent>
+          <Text className="text-[14px] text-ink-muted">
+            A correção desta prova será removida. Não é possível desfazer.
+          </Text>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="ghost" onPress={() => setConfirmDeleteCorrection(null)}>
+            Cancelar
+          </Button>
+          <Button variant="destructive" onPress={handleDeleteCorrection}>
+            Excluir
+          </Button>
+        </DialogActions>
+      </Dialog>
     </View>
   );
 }
@@ -323,9 +441,11 @@ export function ExamDetailScreen({ route, navigation }: Props) {
 function ClassGroupView({
   group,
   studentMap,
+  onCorrectionPress,
 }: {
   group: ClassGroup;
   studentMap: Map<string, Student>;
+  onCorrectionPress: (c: Correction) => void;
 }) {
   return (
     <View className="mt-3">
@@ -365,11 +485,14 @@ function ClassGroupView({
             const st = c.studentId ? studentMap.get(c.studentId) : null;
             const displayName = st?.name ?? c.studentNameRaw ?? 'Aluno';
             return (
-              <View
+              <Pressable
                 key={c.id}
-                className={`flex-row items-center p-3 gap-3 ${
+                onPress={() => onCorrectionPress(c)}
+                className={`flex-row items-center p-3 gap-3 active:bg-brand-50 ${
                   idx > 0 ? 'border-t border-line' : ''
                 }`}
+                accessibilityRole="button"
+                accessibilityLabel={`Editar ou excluir correção de ${displayName}`}
               >
                 <View className="w-10 h-10 rounded-full bg-brand items-center justify-center">
                   <Text className="text-white font-bold text-[16px]">
@@ -386,7 +509,12 @@ function ClassGroupView({
                   </Text>
                 </View>
                 <ScoreBadge score={c.score} size="md" />
-              </View>
+                <Ionicons
+                  name="ellipsis-vertical"
+                  size={18}
+                  color={colors.textMuted}
+                />
+              </Pressable>
             );
           })}
         </View>
@@ -395,7 +523,13 @@ function ClassGroupView({
   );
 }
 
-function OrphanGroup({ corrections }: { corrections: Correction[] }) {
+function OrphanGroup({
+  corrections,
+  onCorrectionPress,
+}: {
+  corrections: Correction[];
+  onCorrectionPress: (c: Correction) => void;
+}) {
   return (
     <View className="mt-3">
       <View className="flex-row items-center py-2 px-1 gap-3">
@@ -419,11 +553,14 @@ function OrphanGroup({ corrections }: { corrections: Correction[] }) {
       </View>
       <View className="bg-bg-surface rounded-2xl overflow-hidden">
         {corrections.map((c, idx) => (
-          <View
+          <Pressable
             key={c.id}
-            className={`flex-row items-center p-3 gap-3 ${
+            onPress={() => onCorrectionPress(c)}
+            className={`flex-row items-center p-3 gap-3 active:bg-brand-50 ${
               idx > 0 ? 'border-t border-line' : ''
             }`}
+            accessibilityRole="button"
+            accessibilityLabel="Editar ou excluir correção"
           >
             <View
               className="w-10 h-10 rounded-full items-center justify-center"
@@ -441,7 +578,12 @@ function OrphanGroup({ corrections }: { corrections: Correction[] }) {
               </Text>
             </View>
             <ScoreBadge score={c.score} size="md" />
-          </View>
+            <Ionicons
+              name="ellipsis-vertical"
+              size={18}
+              color={colors.textMuted}
+            />
+          </Pressable>
         ))}
       </View>
     </View>

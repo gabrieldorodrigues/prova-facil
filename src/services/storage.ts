@@ -327,6 +327,12 @@ export const examStorage = {
 };
 
 export const correctionStorage = {
+  async get(id: string): Promise<Correction | undefined> {
+    await ensureMigrated();
+    const all = await readJSON<Correction[]>(CORRECTIONS_KEY, []);
+    return all.find((c) => c.id === id);
+  },
+
   async listByExam(examId: string): Promise<Correction[]> {
     await ensureMigrated();
     const all = await readJSON<Correction[]>(CORRECTIONS_KEY, []);

@@ -23,7 +23,12 @@ import {
 import { Input } from "../components/ui/Input";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { detectAnswers, GeminiKeyMissingError } from "../services/geminiVision";
-import { classStorage, examStorage, studentStorage } from "../services/storage";
+import {
+  classStorage,
+  correctionStorage,
+  examStorage,
+  studentStorage,
+} from "../services/storage";
 import { Class, Exam, QUESTION_TYPE_LABEL, Student } from "../types";
 import { colors, elevation, radius, spacing } from "../theme";
 import { getOptionsForType } from "../utils/grading";
@@ -36,7 +41,9 @@ export function ReviewScreen({ route, navigation }: Props) {
     studentName: initialStudentName,
     photoUris,
     studentId: initialStudentId,
+    correctionId,
   } = route.params;
+  const isEditing = !!correctionId;
   const [exam, setExam] = useState<Exam | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -78,6 +85,20 @@ export function ReviewScreen({ route, navigation }: Props) {
         if (cls.length === 1) setNewStudentClassId(cls[0].id);
       }
 
+      if (isEditing && correctionId) {
+        const existing = await correctionStorage.get(correctionId);
+        if (cancelled) return;
+        if (existing) {
+          setAnswers(existing.detectedAnswers);
+        } else {
+          const fallback: Record<string, string> = {};
+          for (const q of e.questions) fallback[q.id] = "?";
+          setAnswers(fallback);
+        }
+        setLoading(false);
+        return;
+      }
+
       try {
         const detected = await detectAnswers(e, photoUris);
         if (!cancelled) setAnswers(detected);
@@ -102,7 +123,7 @@ export function ReviewScreen({ route, navigation }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [examId, photoUris, navigation]);
+  }, [examId, photoUris, navigation, isEditing, correctionId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -189,9 +210,13 @@ export function ReviewScreen({ route, navigation }: Props) {
       <View style={styles.loading}>
         <View style={styles.loadingBox}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingTitle}>Analisando com IA</Text>
+          <Text style={styles.loadingTitle}>
+            {isEditing ? "Carregando correção" : "Analisando com IA"}
+          </Text>
           <Text style={styles.loadingHint}>
-            Lendo as marcações nas {photoUris.length} foto(s)...
+            {isEditing
+              ? "Recuperando respostas salvas..."
+              : `Lendo as marcações nas ${photoUris.length} foto(s)...`}
           </Text>
         </View>
       </View>
@@ -299,6 +324,7 @@ export function ReviewScreen({ route, navigation }: Props) {
               studentName,
               photoUris,
               detectedAnswers: answers,
+              correctionId,
             })
           }
         >

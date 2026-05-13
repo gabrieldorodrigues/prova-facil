@@ -15,9 +15,12 @@ import { calculateGrade } from '../utils/grading';
 type Props = NativeStackScreenProps<RootStackParamList, 'Result'>;
 
 export function ResultScreen({ route, navigation }: Props) {
-  const { examId, studentName, photoUris, detectedAnswers, studentId } = route.params;
+  const { examId, studentName, photoUris, detectedAnswers, studentId, correctionId } =
+    route.params;
+  const isEditing = !!correctionId;
   const [exam, setExam] = useState<Exam | null>(null);
   const [saving, setSaving] = useState(false);
+  const [existingCorrectedAt, setExistingCorrectedAt] = useState<string | null>(null);
 
   useEffect(() => {
     examStorage.get(examId).then((e) => {
@@ -25,6 +28,13 @@ export function ResultScreen({ route, navigation }: Props) {
       else setExam(e);
     });
   }, [examId, navigation]);
+
+  useEffect(() => {
+    if (!correctionId) return;
+    correctionStorage.get(correctionId).then((c) => {
+      if (c) setExistingCorrectedAt(c.correctedAt);
+    });
+  }, [correctionId]);
 
   const grade = useMemo(
     () => (exam ? calculateGrade(exam, detectedAnswers) : null),
@@ -40,7 +50,7 @@ export function ResultScreen({ route, navigation }: Props) {
     setSaving(true);
     try {
       await correctionStorage.save({
-        id: Crypto.randomUUID(),
+        id: correctionId ?? Crypto.randomUUID(),
         examId,
         studentId: studentId ?? null,
         studentNameRaw: studentName,
@@ -49,7 +59,7 @@ export function ResultScreen({ route, navigation }: Props) {
         score: grade.score,
         hits: grade.hits,
         misses: grade.misses,
-        correctedAt: new Date().toISOString(),
+        correctedAt: existingCorrectedAt ?? new Date().toISOString(),
         identified: !!studentId,
       });
       navigation.dispatch(
@@ -162,7 +172,7 @@ export function ResultScreen({ route, navigation }: Props) {
           loading={saving}
           disabled={saving}
         >
-          Salvar correção
+          {isEditing ? 'Atualizar correção' : 'Salvar correção'}
         </Button>
       </View>
     </View>

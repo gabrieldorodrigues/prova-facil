@@ -27,13 +27,20 @@ export type RootStackParamList = {
   Capture: { examId: string };
   BatchCapture: { examId: string };
   BatchReview: { examId: string; classId: string; photoUris: string[] };
-  Review: { examId: string; studentId?: string; studentName: string; photoUris: string[] };
+  Review: {
+    examId: string;
+    studentId?: string;
+    studentName: string;
+    photoUris: string[];
+    correctionId?: string;
+  };
   Result: {
     examId: string;
     studentName: string;
     photoUris: string[];
     detectedAnswers: Record<string, string>;
     studentId?: string;
+    correctionId?: string;
   };
 };
 
