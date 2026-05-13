@@ -151,6 +151,23 @@ export function CaptureScreen({ route, navigation }: Props) {
     return map;
   }, [students]);
 
+  const step1Summary = useMemo(() => {
+    const nClass = classes.length;
+    const nStu = students.length;
+    if (nClass === 0) return 'Carregando turmas…';
+    if (nStu === 0)
+      return `Nenhum aluno cadastrado nas ${nClass === 1 ? 'turma desta prova' : `${nClass} turmas desta prova`}.`;
+    const turmaWord = nClass === 1 ? 'turma' : 'turmas';
+    const alunoWord = nStu === 1 ? 'aluno' : 'alunos';
+    return `${nStu} ${alunoWord} em ${nClass} ${turmaWord} — toque abaixo para escolher.`;
+  }, [classes.length, students.length]);
+
+  const openNewStudentDialog = () => {
+    if (classes.length === 1) setNewStudentClassId(classes[0].id);
+    else setNewStudentClassId(null);
+    setShowAddStudent(true);
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.bg }}
@@ -160,34 +177,76 @@ export function CaptureScreen({ route, navigation }: Props) {
         <View style={styles.card}>
           <Text style={styles.stepLabel}>Passo 1 de 3</Text>
           <Text style={styles.stepTitle}>Identifique o aluno</Text>
+          <Text style={styles.stepHint}>
+            Indique quem fez esta prova: escolha alguém já cadastrado ou cadastre
+            um aluno novo (só aparecem turmas ligadas a esta avaliação).
+          </Text>
 
-          <Pressable
-            onPress={() => setShowStudentPicker(true)}
-            style={({ pressed }) => [
-              styles.studentPicker,
-              pressed && { opacity: 0.85 },
-              !selectedStudent && styles.studentPickerEmpty,
-            ]}
-          >
-            {selectedStudent ? (
-              <>
+          <Text style={styles.step1Summary}>{step1Summary}</Text>
+
+          {selectedStudent ? (
+            <View style={styles.selectedStudentBlock}>
+              <View style={styles.selectedStudentRow}>
                 <View style={styles.studentAvatar}>
                   <Text style={styles.studentAvatarText}>
                     {selectedStudent.name.charAt(0).toUpperCase()}
                   </Text>
                 </View>
                 <View style={{ flex: 1 }}>
+                  <Text style={styles.selectedBadge}>Aluno selecionado</Text>
                   <Text style={styles.studentName}>{selectedStudent.name}</Text>
                   {selectedClass ? (
                     <Text style={styles.studentClass}>{selectedClass.name}</Text>
                   ) : null}
                 </View>
-              </>
-            ) : (
-              <Text style={styles.studentHint}>👤 Selecionar aluno</Text>
-            )}
-            <Text style={styles.chevron}>›</Text>
-          </Pressable>
+              </View>
+              <View style={styles.selectedActions}>
+                <Button
+                  variant="tonal"
+                  size="sm"
+                  style={{ flex: 1 }}
+                  iconLeft={
+                    <Ionicons name="swap-horizontal" size={16} color={colors.primaryDark} />
+                  }
+                  onPress={() => setShowStudentPicker(true)}
+                >
+                  Trocar
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  style={{ flex: 1 }}
+                  iconLeft={
+                    <Ionicons name="person-add-outline" size={16} color={colors.primary} />
+                  }
+                  onPress={openNewStudentDialog}
+                >
+                  Novo aluno
+                </Button>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.step1Actions}>
+              <Button
+                variant="tonal"
+                iconLeft={
+                  <Ionicons name="list-outline" size={18} color={colors.primaryDark} />
+                }
+                onPress={() => setShowStudentPicker(true)}
+              >
+                Escolher aluno na lista
+              </Button>
+              <Button
+                variant="secondary"
+                iconLeft={
+                  <Ionicons name="person-add-outline" size={18} color={colors.primary} />
+                }
+                onPress={openNewStudentDialog}
+              >
+                Cadastrar aluno novo
+              </Button>
+            </View>
+          )}
         </View>
 
         <View style={[styles.card, { marginTop: spacing.md }]}>
@@ -262,12 +321,18 @@ export function CaptureScreen({ route, navigation }: Props) {
         open={showStudentPicker}
         onOpenChange={(o) => !o && setShowStudentPicker(false)}
       >
-        <DialogTitle>Selecionar aluno</DialogTitle>
+        <DialogTitle>Escolher aluno</DialogTitle>
         <DialogScrollArea>
+          <Text className="px-5 pb-3 text-[13px] text-ink-muted leading-[18px]">
+            Lista agrupada por turma. Só entram turmas em que esta prova está
+            disponível.
+          </Text>
           {students.length === 0 ? (
-            <View className="px-5 py-6">
-              <Text className="text-ink-muted text-center">
-                Nenhum aluno cadastrado nas turmas desta prova.
+            <View className="px-5 py-5 items-center">
+              <Ionicons name="people-outline" size={40} color="#94a3b8" />
+              <Text className="text-ink-muted text-center text-[14px] mt-3 leading-[20px]">
+                Ainda não há alunos nestas turmas. Use o botão abaixo para
+                cadastrar o primeiro.
               </Text>
             </View>
           ) : (
@@ -275,10 +340,12 @@ export function CaptureScreen({ route, navigation }: Props) {
               const list = studentsByClass.get(c.id) ?? [];
               if (list.length === 0) return null;
               return (
-                <View key={c.id}>
-                  <Text className="px-5 pt-3 pb-1 text-[11px] font-bold text-ink-muted uppercase tracking-wider">
-                    {c.name}
-                  </Text>
+                <View key={c.id} className="mb-1">
+                  <View className="mx-3 mt-2 mb-1 px-3 py-2 rounded-lg bg-brand-50">
+                    <Text className="text-[12px] font-bold text-brand-800 uppercase tracking-wide">
+                      Turma · {c.name}
+                    </Text>
+                  </View>
                   {list.map((s) => (
                     <Pressable
                       key={s.id}
@@ -288,7 +355,7 @@ export function CaptureScreen({ route, navigation }: Props) {
                       }}
                       className="flex-row items-center py-3 px-5 gap-3 active:bg-brand-50"
                     >
-                      <View className="w-9 h-9 rounded-full bg-brand-50 items-center justify-center">
+                      <View className="w-9 h-9 rounded-full bg-brand-100 items-center justify-center">
                         <Text className="text-brand-700 font-bold">
                           {s.name.charAt(0).toUpperCase()}
                         </Text>
@@ -300,9 +367,7 @@ export function CaptureScreen({ route, navigation }: Props) {
                         {s.name}
                       </Text>
                       {selectedId === s.id ? (
-                        <Text className="text-brand-500 text-[20px] font-extrabold">
-                          ✓
-                        </Text>
+                        <Ionicons name="checkmark-circle" size={22} color="#2C5F9E" />
                       ) : null}
                     </Pressable>
                   ))}
@@ -313,17 +378,22 @@ export function CaptureScreen({ route, navigation }: Props) {
           <Pressable
             onPress={() => {
               setShowStudentPicker(false);
-              if (classes.length === 1) setNewStudentClassId(classes[0].id);
-              setShowAddStudent(true);
+              openNewStudentDialog();
             }}
-            className="flex-row items-center py-3 px-5 gap-3 active:bg-brand-50 border-t border-line"
+            className="flex-row items-center py-3 px-5 gap-3 active:bg-brand-50 border-t border-line mt-1"
           >
-            <View className="w-9 h-9 rounded-full bg-brand-50 items-center justify-center">
-              <Text className="text-brand-700 font-bold text-[18px]">＋</Text>
+            <View className="w-9 h-9 rounded-full bg-brand-100 items-center justify-center">
+              <Ionicons name="person-add-outline" size={20} color="#1A3A5F" />
             </View>
-            <Text className="flex-1 text-[15px] font-semibold text-brand-500">
-              Adicionar aluno
-            </Text>
+            <View className="flex-1">
+              <Text className="text-[15px] font-semibold text-brand-700">
+                Cadastrar aluno novo
+              </Text>
+              <Text className="text-[12px] text-ink-muted mt-0.5">
+                Nome e turma (turmas desta prova)
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
           </Pressable>
         </DialogScrollArea>
         <DialogActions>
@@ -342,6 +412,9 @@ export function CaptureScreen({ route, navigation }: Props) {
           {classes.length > 1 ? (
             <>
               <Text style={styles.fieldLabel}>Turma</Text>
+              <Text style={styles.fieldHint}>
+                Apenas turmas em que esta avaliação está disponível.
+              </Text>
               <View style={styles.classChipsRow}>
                 {classes.map((c) => (
                   <Pressable
@@ -384,7 +457,10 @@ export function CaptureScreen({ route, navigation }: Props) {
           </Button>
           <Button
             onPress={handleAddStudent}
-            disabled={!newStudentName.trim() || !newStudentClassId}
+            disabled={
+              !newStudentName.trim() ||
+              (classes.length > 1 && !newStudentClassId)
+            }
           >
             Adicionar
           </Button>
@@ -415,21 +491,43 @@ const styles = StyleSheet.create({
   },
   stepHint: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
 
-  studentPicker: {
+  step1Summary: {
+    fontSize: 13,
+    color: colors.textMuted,
+    marginTop: spacing.md,
+    lineHeight: 18,
+  },
+  step1Actions: {
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+  selectedStudentBlock: {
+    marginTop: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.primaryLight,
+    padding: spacing.md,
+    gap: spacing.md,
+  },
+  selectedStudentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: colors.primaryLight,
     gap: spacing.md,
-    marginTop: spacing.md,
   },
-  studentPickerEmpty: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: colors.border,
+  selectedBadge: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 2,
   },
+  selectedActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+
   studentAvatar: {
     width: 36,
     height: 36,
@@ -439,28 +537,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   studentAvatarText: { color: '#ffffff', fontWeight: '800' },
-  studentName: { fontSize: 15, fontWeight: '700', color: colors.primaryDark },
-  studentClass: { fontSize: 11, color: colors.primaryDark, opacity: 0.8 },
-  studentHint: { flex: 1, fontSize: 14, color: colors.textMuted },
-  chevron: { fontSize: 22, color: colors.textMuted },
+  studentName: { fontSize: 16, fontWeight: '700', color: colors.primaryDark },
+  studentClass: { fontSize: 12, color: colors.primaryDark, opacity: 0.85, marginTop: 2 },
 
   photoButtons: { flexDirection: 'row', marginTop: spacing.md, gap: spacing.sm },
-  primaryBtn: {
-    flex: 1,
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    alignItems: 'center',
-  },
-  primaryBtnText: { color: '#ffffff', fontWeight: '700', fontSize: 15 },
-  secondaryBtn: {
-    flex: 1,
-    backgroundColor: colors.primaryLight,
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    alignItems: 'center',
-  },
-  secondaryBtnText: { color: colors.primaryDark, fontWeight: '700', fontSize: 15 },
   photoCount: { fontSize: 12, color: colors.textMuted, marginTop: spacing.md },
 
   photoCard: {
@@ -489,35 +569,6 @@ const styles = StyleSheet.create({
     bottom: spacing.lg,
   },
 
-  dialogSection: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: 4,
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  dialogRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    gap: spacing.md,
-  },
-  smallAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 999,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  smallAvatarText: { color: colors.primaryDark, fontWeight: '700' },
-  dialogRowText: { flex: 1, fontSize: 15, color: colors.textPrimary, fontWeight: '500' },
-  checkmark: { color: colors.primary, fontSize: 18, fontWeight: '700' },
-
   fieldLabel: {
     fontSize: 11,
     color: colors.textMuted,
@@ -525,6 +576,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: spacing.xs,
+  },
+  fieldHint: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
   },
   classChipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   classChoiceChip: {
